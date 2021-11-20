@@ -111,14 +111,14 @@ public:
 	}
 // accessors 
 // front
-	reference front() { return brain.front(); }
-	const_reference front() const { return brain.front(); }
+	reference front() { return brain.mem(); }
+	const_reference front() const { return brain.mem(); }
 // back
-	reference back() { return brain.back(); }
-	const_reference back() const { return brain.back(); }
+	reference back() { return brain.memlast(); }
+	const_reference back() const { return brain.memlast(); }
 // data
-	pointer	data() { return brain._mem; }
-	const_pointer data() const { return brain._mem; }
+	pointer	data() { return brain.mem(); }
+	const_pointer data() const { return brain.mem(); }
 // empty
 	bool empty() const { return brain.empty(); }
 // size
@@ -128,20 +128,20 @@ public:
 // capacity
 	size_type capacity() const { return brain.capacity(); }
 // allocator 
-	allocator_type	get_allocator() const { return brain._alloc; }
+	allocator_type	get_allocator() const { return brain.get_allocator(); }
 // iterators 
 // begin
-	iterator begin() { return iterator(brain.data()); }
-	const_iterator begin() const { return iterator(brain.data()); }
+	iterator begin() { return iterator(brain.memstart()); }
+	const_iterator begin() const { return iterator(brain.memstart()); }
 // end
-	iterator end() { return iterator(brain.end()); }
-	const_iterator end() const { return iterator(brain.dataend()); }
+	iterator end() { return iterator(brain.memend()); }
+	const_iterator end() const { return iterator(brain.memend()); }
 // rbegin
-	rev_iterator rbegin() { return iterator(brain.dataend() - 1); }
-	const_rev_iterator rbegin() const { return iterator(brain.dataend() - 1); }
+	rev_iterator rbegin() { return iterator(brain.memlast()); }
+	const_rev_iterator rbegin() const { return iterator(brain.memlast()); }
 // rend
-	rev_iterator rend() { return iterator(brain.data() - 1); }
-	const_rev_iterator rend() const { return iterator(brain.data() - 1); }
+	rev_iterator rend() { return iterator(brain.memstart() - 1); }
+	const_rev_iterator rend() const { return iterator(brain.memstart() - 1); }
 // clear 
 	void clear() {
 		for (iterator it = begin(); it < end(); ++it)
@@ -189,7 +189,6 @@ public:
 		if (size() == 0)
 			throw std::length_error("Erasing element of empty vector");
 		_destroy(*pos);
-		//~(*pos)(); // really??
 		std::copy(pos + 1, end(), pos);
 		--brain._size;
 		return pos + 1;
@@ -216,12 +215,12 @@ public:
 // pop_back 
 	void pop_back() {
 		if (empty()) return; // or exception?
-		_destroy(brain.back());
+		_destroy(*brain.memlast());
 		brain.retreat_border();
 	}
 protected:
 // destroy 
-	void _destroy(const T& value) { ~value(); }
+	void _destroy(const T& value) { value.~T(); }
 }; // ! class vector
 
 } // ! namespace ft

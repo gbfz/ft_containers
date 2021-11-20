@@ -29,7 +29,7 @@ protected:
 	size_type	_capacity;
 	difference_type	_max;
 public:
-// constructors
+// constructors 
 // default constructor
 	vector_brain(): _alloc(allocator_type()),
 			_size(0), _capacity(2) {
@@ -40,8 +40,8 @@ public:
 	}
 // parametrized constructor
 	vector_brain(size_type new_size, size_type new_cap):
-       			_size(new_size), _capacity(new_cap),
-			_alloc(allocator_type()) {
+			_alloc(allocator_type()),
+       			_size(new_size), _capacity(new_cap) {
 		_mem = _alloc.allocate(_capacity);
 		_memlast = _mem;
 		_memend = _mem;
@@ -57,6 +57,10 @@ public:
 			std::copy(other.begin(), other.end(), _mem);
 			_max = std::numeric_limits<size_type>::max();
 	}
+// default destructor
+	~vector_brain() {
+		deallocate();
+	}
 // = 
 	vector_brain& operator = (const vector_brain& other) {
 		deallocate();
@@ -66,11 +70,7 @@ public:
 		_memlast = _mem + _size - 1;
 		_memend = _memlast + 1;
 	}
-// default destructor
-	~vector_brain() {
-		deallocate();
-	}
-// memory
+// memory 
 // allocate
 	pointer	allocate(size_type amount) {
 		if (amount == 0) return 0;
@@ -109,26 +109,24 @@ public:
 		std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, _capacity * 2, _size);
 	}
-// iterators
+// iterators 
 	iterator begin() { return _mem; }
-	//const_iterator begin() const { return _mem; }
+	const_iterator begin() const { return _mem; }
 	iterator end() { return _memend; }
-	//const_iterator end() const { return _memend; }
-// accessors
-	pointer data() { return _mem; }
-	const_pointer data() const { return _mem; }
-	pointer dataend() { return _memend; }
-	const_pointer dataend() const { return _memend; }
-	reference front() { return *_mem; }
-	const_reference front() const { return *_mem; }
-	reference back() { return *_memlast; }
-	const_reference back() const { return *_memlast; }
+	const_iterator end() const { return _memend; }
+// accessors 
+	pointer memstart() { return _mem; }
+	const_pointer memstart() const { return _mem; }
+	pointer memlast() { return _memlast; }
+	const_pointer memlast() const { return _memlast; }
+	pointer memend() { return _memend; }
+	const_pointer memend() const { return _memend; }
 	size_type size() const { return _size; }
 	bool empty() const { return _size == 0; }
 	size_type capacity() const { return _capacity; }
 	size_type max_size() const { return _max; }
 	allocator_type get_allocator() const { return _alloc; }
-// modifiers
+// modifiers 
 	void	set_mem(const_reference value) { *_mem = value; }
 	void	set_memlast(const_reference value) { *_memlast = value; }
 	void	set_memend(const_reference value) { *_memend = value; }
