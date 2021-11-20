@@ -4,6 +4,13 @@
 
 using namespace std;
 
+template <class vector>
+void	print(const vector& v) {
+	for (typename vector::const_iterator it = v.begin(); it < v.end(); ++it)
+		cout << *it;// << ' ';
+	cout << '\n';
+}
+
 void	test1()
 {
 	ft::vector<int> a;
@@ -36,12 +43,40 @@ void	test1()
 
 void	test2()
 {
-	string str = "robb";
-	ft::vector<char> s(str.length());
-	s.insert(s.begin() + str.length(), str.begin(), str.end());
+	string str = "rrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbrobbobb";
+	//std::vector<char> so(str.length());
+	std::vector<char> so;
+	so.insert(so.begin(), str.begin(), str.end());
+	print(so);
+
+	cout << "cap: " << so.capacity() << '\n';
+	cout << "size: " << so.size() << '\n';
+	cout << "strsize: " << str.size() << '\n';
+
+
+	//ft::vector<char> s(str.length());
+	ft::vector<char> s;
+	try {
+		s.insert(s.begin(), str.begin(), str.end());
+	} catch (...) {
+		cout << "fuck\n";
+	}
+	cout << "cap: " << s.capacity() << '\n';
+	cout << "size: " << s.size() << '\n';
+}
+
+void	test3()
+{
+	ft::vector<char> a;
+	std::vector<char> b;
+
+	b.insert(b.end(), 'b');
+	cout << b.front() << '\n';
+	a.insert(a.end(), 'a');
+	cout << a.front() << '\n';
 }
 
 int main()
 {
-	test2();
+	test3();
 }

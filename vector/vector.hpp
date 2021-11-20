@@ -10,7 +10,7 @@ template < typename T, class Alloc = std::allocator<T> >
 class vector {
 
 public:
-// member types definitions
+// member types definitions 
 	typedef T			value_type;
 	typedef Alloc			allocator_type;
 	typedef typename Alloc::pointer	pointer;
@@ -23,8 +23,9 @@ public:
 	typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
 	typedef vector_const_iterator < vector<T> >		const_iterator;
 	typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
+	typedef std::random_access_iterator_tag			iterator_category;
 protected:
-// brain
+// brain 
 	vector_brain<vector> brain;
 public:
 // constructors 
@@ -56,7 +57,7 @@ public:
 	void	assign(size_type count,	const_reference value) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
-		brain.reallocate(count);
+		resize(count);
 		std::fill(begin(), end(), value);
 	}
 	template <class InputIt>
@@ -83,13 +84,14 @@ public:
 // resize 
 	void	resize(size_type count, value_type value = value_type()) {
 		if (count <= size()) {
-			brain._size = count;
+			std::for_each(begin() + count, end(), brain.destroy);
+			brain.set_size(count);
 			return;
 		}
 		pointer new_mem = brain.allocate(count);
 		std::copy(begin(), end(), new_mem);
 		std::fill(new_mem + size(), new_mem + count, value);
-		_update_mem(new_mem, count, count);
+		brain.update_mem(new_mem, count, count);
 	}
 // at 
 	reference at(size_type pos) {
@@ -111,14 +113,14 @@ public:
 	}
 // accessors 
 // front
-	reference front() { return brain.mem(); }
-	const_reference front() const { return brain.mem(); }
+	reference front() { return *brain.memstart(); }
+	const_reference front() const { return *brain.memstart(); }
 // back
-	reference back() { return brain.memlast(); }
-	const_reference back() const { return brain.memlast(); }
+	reference back() { return *brain.memlast(); }
+	const_reference back() const { return *brain.memlast(); }
 // data
-	pointer	data() { return brain.mem(); }
-	const_pointer data() const { return brain.mem(); }
+	pointer	data() { return brain.memstart(); }
+	const_pointer data() const { return brain.memstart(); }
 // empty
 	bool empty() const { return brain.empty(); }
 // size
@@ -150,13 +152,15 @@ public:
 	}
 // insert 
 	iterator insert(iterator pos, const_reference value) {
-		if (pos < begin() || pos >= /*>=?*/ end())
+		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid pos in insert().1");
-		if (size() + 1 >= capacity())
+		if (size() + 1 == capacity())
 			brain.double_size();
-		std::copy(pos, end(), pos + 1);
+		std::copy_backward(pos, end(), end() + 1);
+		//std::copy_backward(pos - 1, end() - 1, end());
+		//std::copy(pos, end(), pos + 1);
 		*pos = value;
-		++brain._size;
+		brain.advance_size(1);
 		return pos;
 	}
 	iterator insert(iterator pos, size_type count, const_reference value) {
@@ -202,7 +206,7 @@ public:
 		pointer new_mem = brain.allocate(capacity() - dist);
 		std::copy(begin(), first, new_mem);
 		std::copy(last, end(), new_mem);
-		std::for_each(first, last, &_destroy);
+		std::for_each(first, last, brain.destroy);
 		brain.update_mem(new_mem, capacity() - dist, size() - dist);
 	}
 // push_back 
@@ -215,12 +219,9 @@ public:
 // pop_back 
 	void pop_back() {
 		if (empty()) return; // or exception?
-		_destroy(*brain.memlast());
+		brain.destroy(brain.memlast());
 		brain.retreat_border();
 	}
-protected:
-// destroy 
-	void _destroy(const T& value) { value.~T(); }
 }; // ! class vector
 
 } // ! namespace ft
