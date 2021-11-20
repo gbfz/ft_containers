@@ -153,7 +153,7 @@ public:
 
 
 
-// const iterator
+// const_iterator
 template <class vector> class vector_const_iterator {
 public:	// member types definitions
 	typedef std::random_access_iterator_tag		iterator_category;
@@ -161,6 +161,7 @@ public:	// member types definitions
 	typedef typename vector::value_type		value_type;
 	typedef value_type*				pointer;
 	typedef const value_type*			const_pointer;
+	typedef value_type&				reference;
 	typedef const value_type&			const_reference;
 	typedef typename vector::difference_type	difference_type;
 	typedef typename vector::size_type		size_type;
