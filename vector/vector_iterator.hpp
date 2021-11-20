@@ -101,6 +101,8 @@ protected:
 public:
 // ctors, =, dtor 
 	vector_const_iterator(pointer ptr): m_Ptr(ptr) {}
+	vector_const_iterator(vector_iterator<vector>& other):
+		m_Ptr(other.m_Ptr) {}
 	vector_const_iterator(const_iterator& other): m_Ptr(other.m_Ptr) {}
 	const_iterator& operator = (const_iterator& other) {
 		m_Ptr = other.m_Ptr;

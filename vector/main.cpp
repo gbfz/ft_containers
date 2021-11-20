@@ -4,10 +4,17 @@
 
 using namespace std;
 
-template <class vector>
-void	print(const vector& v) {
-	for (typename vector::const_iterator it = v.begin(); it < v.end(); ++it)
-		cout << *it;// << ' ';
+template <typename T>
+void	print(const std::vector<T>& v) {
+	for (typename std::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
+		cout << *it;
+	cout << '\n';
+}
+
+template <typename T>
+void	print(const ft::vector<T>& v) {
+	for (typename ft::vector<T>::iterator it = v.begin(); it < v.end(); ++it)
+		cout << *it;
 	cout << '\n';
 }
 
@@ -61,6 +68,7 @@ void	test2()
 	} catch (...) {
 		cout << "fuck\n";
 	}
+	print(s);
 	cout << "cap: " << s.capacity() << '\n';
 	cout << "size: " << s.size() << '\n';
 }
@@ -78,5 +86,5 @@ void	test3()
 
 int main()
 {
-	test3();
+	test2();
 }

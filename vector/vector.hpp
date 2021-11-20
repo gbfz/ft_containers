@@ -133,17 +133,13 @@ public:
 	allocator_type	get_allocator() const { return brain.get_allocator(); }
 // iterators 
 // begin
-	iterator begin() { return iterator(brain.memstart()); }
-	const_iterator begin() const { return iterator(brain.memstart()); }
+	iterator begin() const { return iterator(brain.memstart()); }
 // end
-	iterator end() { return iterator(brain.memend()); }
-	const_iterator end() const { return iterator(brain.memend()); }
+	iterator end() const { return iterator(brain.memend()); }
 // rbegin
-	rev_iterator rbegin() { return iterator(brain.memlast()); }
-	const_rev_iterator rbegin() const { return iterator(brain.memlast()); }
+	rev_iterator rbegin() const { return rev_iterator(brain.memlast()); }
 // rend
-	rev_iterator rend() { return iterator(brain.memstart() - 1); }
-	const_rev_iterator rend() const { return iterator(brain.memstart() - 1); }
+	rev_iterator rend() const { return rev_iterator(brain.memstart() - 1); }
 // clear 
 	void clear() {
 		for (iterator it = begin(); it < end(); ++it)
@@ -157,13 +153,12 @@ public:
 		if (size() + 1 == capacity())
 			brain.double_size();
 		std::copy_backward(pos, end(), end() + 1);
-		//std::copy_backward(pos - 1, end() - 1, end());
-		//std::copy(pos, end(), pos + 1);
 		*pos = value;
 		brain.advance_size(1);
 		return pos;
 	}
 	iterator insert(iterator pos, size_type count, const_reference value) {
+		/*
 		if (count == 0) return pos;
 		if (pos - count < begin() || pos >= end())
 			throw std::out_of_range("Invalid pos in insert().2");
@@ -173,18 +168,20 @@ public:
 		std::fill(new_mem + dist, new_mem + dist + count, value);
 		std::copy(pos, end(), new_mem);
 		brain.update_mem(new_mem, capacity() + count, size() + count);
+		*/
 	}
 	template <class InputIt>
 	void	insert(iterator pos, InputIt first, InputIt last) {
 		difference_type dist = std::distance(first, last);
 		if (dist == 0) return;
-		if (pos - dist < begin() || pos >= end())
+		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().3");
-		pointer new_mem = brain.allocate(capacity() + dist);
-		iterator endcopied = std::copy(begin(), pos - dist, new_mem);
-		std::copy(first, last, endcopied);
-		std::copy(endcopied + dist, end(), new_mem);
-		brain.update_mem(new_mem, capacity() + dist, size() + dist);
+		pointer new_mem = brain.allocate(size() + dist);
+		difference_type block = std::distance(begin(), pos);
+		std::copy(begin(), pos, new_mem);
+		std::copy(first, last, new_mem + block);
+		std::copy(begin() + block, end(), new_mem + block + dist);
+		brain.update_mem(new_mem, size() + dist, size() + dist);
 	}
 // erase 
 	iterator erase(iterator pos) {
