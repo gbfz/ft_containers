@@ -24,7 +24,6 @@ protected:
 // member fields 
 	allocator_type	_alloc;
 	pointer		_mem;
-	pointer		_memlast;
 	pointer		_memend;
 	size_type	_size;
 	size_type	_capacity;
@@ -33,30 +32,27 @@ public:
 // constructors 
 // default constructor
 	vector_brain(): _alloc(allocator_type()),
-			_size(0), _capacity(2) {
+		_size(0), _capacity(2) {
 		_mem = _alloc.allocate(_capacity);
-		_memlast = _mem;
 		_memend = _mem;
-		_max = std::numeric_limits<size_type>::max();
+		_max = std::numeric_limits<value_type>::max();
 	}
 // parametrized constructor
-	vector_brain(size_type new_size, size_type new_cap):
+	vector_brain(size_type new_cap):
 			_alloc(allocator_type()),
-       			_size(new_size), _capacity(new_cap) {
+			_size(0), _capacity(new_cap) {
 		_mem = _alloc.allocate(_capacity);
-		_memlast = _mem;
 		_memend = _mem;
-		_max = std::numeric_limits<size_type>::max();
+		_max = std::numeric_limits<value_type>::max();
 	}
 // copy constructor
 	vector_brain(const vector_brain& other):
 		_alloc(other.get_allocator()),
 		_size(other._size), _capacity(other._capacity) {
-			_mem = _alloc.allocate(_capacity);
-			_memlast = _mem + _size - 1;
-			_memend = _mem + _capacity;
-			std::copy(other.begin(), other.end(), _mem);
-			_max = std::numeric_limits<size_type>::max();
+		_mem = _alloc.allocate(_capacity);
+		_memend = _mem + _capacity;
+		_max = std::numeric_limits<value_type>::max();
+		std::copy(other.begin(), other.end(), _mem);
 	}
 // default destructor
 	~vector_brain() {
@@ -66,10 +62,10 @@ public:
 	vector_brain& operator = (const vector_brain& other) {
 		deallocate();
 		allocate(other._capacity);
-		_size = other._size && _capacity = other._capacity;
+		_size = other._size;
+		_capacity = other._capacity;
 		std::copy(other.begin(), other.end(), begin());
-		_memlast = _mem + _size - 1;
-		_memend = _memlast + 1;
+		_memend = _mem + _capacity;
 	}
 // memory 
 // allocate
@@ -88,33 +84,25 @@ public:
 		_alloc.destroy(p);
 	}
 // update mem
-	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
+	void	update_mem(pointer new_mem, size_type new_cap) {
 		if (capacity() != 0)
 			_alloc.deallocate(_mem, _capacity);
 		_capacity = new_cap;
-		_size = new_size;
 		_mem = new_mem;
-		_memlast = _mem + _size - 1;
-		_memend = _memlast + 1;
+		_memend = _mem + _capacity;
 	}
 // double size
-	void	double_size() {
+	void	double_cap() {
 		pointer new_mem = _alloc.allocate(_capacity * 2);
-		std::copy(begin(), end(), new_mem);
-		update_mem(new_mem, _capacity * 2, _size);
+		std::copy(memfirst(), memlast(), new_mem);
+		update_mem(new_mem, _capacity * 2);
 	}
 // iterators 
-	iterator begin() { return _mem; }
-	const_iterator begin() const { return _mem; }
-	iterator end() { return _memend; }
-	const_iterator end() const { return _memend; }
+	iterator begin() const { return iterator(memfirst()); }
+	iterator end() const { return iterator(memlast()); }
 // accessors 
-	pointer		memstart() { return _mem; }
-	const_pointer	memstart() const { return _mem; }
-	pointer		memlast() { return _memlast; }
-	const_pointer	memlast() const { return _memlast; }
-	pointer		memend() { return _memend; }
-	const_pointer	memend() const { return _memend; }
+	pointer		memfirst() const { return _mem; }
+	pointer		memlast() const { return _mem + _size; }
 	size_type	size() const { return _size; }
 	bool		empty() const { return _size == 0; }
 	size_type	capacity() const { return _capacity; }
@@ -122,14 +110,11 @@ public:
 	allocator_type	get_allocator() const { return _alloc; }
 // modifiers 
 	void	set_mem(const_reference value) { *_mem = value; }
-	void	set_memlast(const_reference value) { *_memlast = value; }
+	void	set_memlast(const_reference value) { *(_mem + _size) = value; }
 	void	set_memend(const_reference value) { *_memend = value; }
-	void	set_size(size_type new_size) { _size = new_size; }
 	void	set_cap(size_type new_cap) { _capacity = new_cap; }
-	void	advance_border() { ++_memlast; ++_memend; }
-	void	retreat_border() { --_memlast; --_memend; }
-	void	advance_size(size_type offset) { _size += offset; }
-	void	retreat_size(size_type offset) { _size -= offset; }
+	void	inc_size() { ++_size; }
+	void	dec_size() { --_size; }
 }; // ! class vector_brain
 
 } // ! namespace ft

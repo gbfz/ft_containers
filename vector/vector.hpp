@@ -36,14 +36,14 @@ public:
 	explicit vector(size_type count,
 			const_reference value = value_type(),
 			const Alloc& alloc = Alloc()):
-		brain(vector_brain<vector>(count, count + 1)) {
+		brain(vector_brain<vector>(count, count)) {
 		std::fill(brain.begin(), brain.end(), value);
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
 		const Alloc& alloc = Alloc()) {
 		difference_type dist = std::distance(first, last);
-		brain = vector_brain<vector>(dist, dist + 1);
+		brain = vector_brain<vector>(dist, dist);
 		if (first < last)
 			std::copy(first, last, begin());
 		else std::reverse_copy(first, last, begin());
@@ -113,14 +113,14 @@ public:
 	}
 // accessors 
 // front
-	reference front() { return *brain.memstart(); }
-	const_reference front() const { return *brain.memstart(); }
+	reference front() { return *brain.memfirst(); }
+	const_reference front() const { return *brain.memfirst(); }
 // back
 	reference back() { return *brain.memlast(); }
 	const_reference back() const { return *brain.memlast(); }
 // data
-	pointer	data() { return brain.memstart(); }
-	const_pointer data() const { return brain.memstart(); }
+	pointer	data() { return brain.memfirst(); }
+	const_pointer data() const { return brain.memfirst(); }
 // empty
 	bool empty() const { return brain.empty(); }
 // size
@@ -133,13 +133,13 @@ public:
 	allocator_type	get_allocator() const { return brain.get_allocator(); }
 // iterators 
 // begin
-	iterator begin() const { return iterator(brain.memstart()); }
+	iterator begin() const { return iterator(brain.memfirst()); }
 // end
-	iterator end() const { return iterator(brain.memend()); }
+	iterator end() const { return iterator(brain.memlast()); }
 // rbegin
 	rev_iterator rbegin() const { return rev_iterator(brain.memlast()); }
 // rend
-	rev_iterator rend() const { return rev_iterator(brain.memstart() - 1); }
+	rev_iterator rend() const { return rev_iterator(brain.memfirst() - 1); }
 // clear 
 	void clear() {
 		for (iterator it = begin(); it < end(); ++it)
@@ -151,10 +151,9 @@ public:
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid pos in insert().1");
 		if (size() + 1 == capacity())
-			brain.double_size();
+			brain.double_cap();
 		std::copy_backward(pos, end(), end() + 1);
 		*pos = value;
-		brain.advance_size(1);
 		return pos;
 	}
 	iterator insert(iterator pos, size_type count, const_reference value) {
@@ -181,7 +180,7 @@ public:
 		std::copy(begin(), pos, new_mem);
 		std::copy(first, last, new_mem + block);
 		std::copy(begin() + block, end(), new_mem + block + dist);
-		brain.update_mem(new_mem, size() + dist, size() + dist);
+		brain.update_mem(new_mem, size() + dist);
 	}
 // erase 
 	iterator erase(iterator pos) {
@@ -191,7 +190,7 @@ public:
 			throw std::length_error("Erasing element of empty vector");
 		_destroy(*pos);
 		std::copy(pos + 1, end(), pos);
-		--brain._size;
+		brain.dec_size();
 		return pos + 1;
 	}
 	iterator erase(iterator first, iterator last) {
@@ -209,15 +208,15 @@ public:
 // push_back 
 	void push_back(const_reference value) {
 		if (size() + 1 >= capacity())
-			brain.double_size();
-		brain.set_memend(value);
-		brain.advance_border();
+			brain.double_cap();
+		brain.set_memlast(value);
+		brain.inc_size();
 	}
 // pop_back 
 	void pop_back() {
 		if (empty()) return; // or exception?
 		brain.destroy(brain.memlast());
-		brain.retreat_border();
+		brain.dec_size();
 	}
 }; // ! class vector
 

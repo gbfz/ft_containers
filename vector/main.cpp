@@ -4,17 +4,18 @@
 
 using namespace std;
 
+// print 
 template <typename T>
 void	print(const std::vector<T>& v) {
 	for (typename std::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
-		cout << *it;
+		cout << *it << ' ';
 	cout << '\n';
 }
 
 template <typename T>
 void	print(const ft::vector<T>& v) {
 	for (typename ft::vector<T>::iterator it = v.begin(); it < v.end(); ++it)
-		cout << *it;
+		cout << *it << ' ';
 	cout << '\n';
 }
 
@@ -23,29 +24,14 @@ void	test1()
 	ft::vector<int> a;
 	cout << "a size: " << a.size() << '\n';
 	cout << "a capacity: " << a.capacity() << '\n';
-	a.push_back(15);
-	cout << *a.begin() << '\n';
+	a.push_back(1); cout << "push\n";
+	print(a);
 	cout << "a size: " << a.size() << '\n';
 	cout << "a capacity: " << a.capacity() << '\n';
-	a.push_back(20);
-	cout << *a.begin() << '\n';
-	cout << *(a.end() - 1) << '\n';
+	a.push_back(2); cout << "push\n";
+	print(a);
 	cout << "a size: " << a.size() << '\n';
 	cout << "a capacity: " << a.capacity() << '\n';
-	a.pop_back();
-	cout << *(a.end() - 1) << '\n';
-	cout << "a size: " << a.size() << '\n';
-	cout << "a capacity: " << a.capacity() << '\n';
-	a.pop_back();
-	cout << "a size: " << a.size() << '\n';
-	cout << "a capacity: " << a.capacity() << '\n';
-	vector<int> b;
-	b.push_back(15);
-	b.push_back(20);
-	b.pop_back();
-	b.pop_back();
-	cout << "b size: " << b.size() << '\n';
-	cout << "b capacity: " << b.capacity() << '\n';
 }
 
 void	test2()
@@ -59,7 +45,6 @@ void	test2()
 	cout << "cap: " << so.capacity() << '\n';
 	cout << "size: " << so.size() << '\n';
 	cout << "strsize: " << str.size() << '\n';
-
 
 	//ft::vector<char> s(str.length());
 	ft::vector<char> s;
@@ -86,5 +71,5 @@ void	test3()
 
 int main()
 {
-	test2();
+	test1();
 }
