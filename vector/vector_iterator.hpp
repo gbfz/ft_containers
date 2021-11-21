@@ -5,19 +5,18 @@
 
 namespace ft {
 
-// std::distance analog 
-template <class _iterator>
-typename iterators_traits<_iterator>::difference_type
-distance(_iterator first, _iterator last) {
+template <class iterator>
+typename iterator::difference_type
+distance(iterator first, iterator last) {
 	return last - first;
 }
 
 // normal iterator 
-template <typename T>
+template <typename vector>
 class vector_iterator {
 public:
 // member type definitions 
-	typedef iterators_traits<vector_iterator_base<T> >	traits;
+	typedef iterators_traits<vector>		traits;
 	typedef typename traits::iterator_category	iterator_category;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
@@ -92,11 +91,11 @@ public:
 }; // ! normal iterator
 
 // const iterator 
-template
-<typename Type> class vector_const_iterator {
+template <typename vector>
+class vector_const_iterator {
 public:
 // member type definitions 
-	typedef iterators_traits<vector_iterator_base<Type> >	traits;
+	typedef iterators_traits<vector>		traits;
 	typedef typename traits::iterator_category	iterator_category;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;

@@ -25,7 +25,6 @@ public:
 	typedef vector_const_iterator < vector<T> >		const_iterator;
 	//typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
 	typedef std::random_access_iterator_tag			iterator_category;
-
 protected:
 // member fields 
 	allocator_type	_alloc;
@@ -92,10 +91,11 @@ public:
 			const Alloc& alloc = Alloc()): // {
 		_size(count), _capacity(count), _alloc(alloc) {
 		_mem = _alloc.allocate(_capacity);
+		std::fill(_mem, _mem + _size, value);
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
-			const Alloc& alloc = Alloc()) {
+			const Alloc& alloc = Alloc()): _alloc(alloc) {
 		_mem = _alloc.allocate(ft::distance(first, last));
 		if (first < last) std::copy(first, last, _mem);
 		else std::reverse_copy(first, last, _mem);
