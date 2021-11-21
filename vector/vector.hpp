@@ -29,33 +29,29 @@ protected:
 // member fields 
 	allocator_type	_alloc;
 	pointer		_mem;
-	//pointer		_memend;
 	size_type	_size;
 	size_type	_capacity;
 	difference_type	_max;
-	pointer		memfirst() const { return _mem; }
-	pointer		memlast() const { return _mem + _size; }
+	pointer		mem() const { return _mem; }
+	pointer		memend() const { return _mem + _size; }
 public:
 // constructors 
 	vector(): _alloc(allocator_type()),
-		  _size(0), _capacity(2) {
+		  _size(0), _capacity(1) {
 		_mem = _alloc.allocate(_capacity);
-		//_memend = _mem;
 		_max = std::numeric_limits<size_type>::max();
 	  }
 	vector(const vector& other):
 		_alloc(other.get_allocator()),
 		_size(other._size), _capacity(other._capacity) {
 		_mem = _alloc.allocate(_capacity);
-		//_memend = _mem + _capacity;
 		_max = std::numeric_limits<size_type>::max();
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc):
 		_alloc(alloc),
-		_size(0), _capacity(2) {
+		_size(0), _capacity(1) {
 		_mem = _alloc.allocate(_capacity);
-		//_memend = _mem + _capacity;
 		_max = std::numeric_limits<size_type>::max();
 	}
 	explicit vector(size_type count,
@@ -64,7 +60,6 @@ public:
 			_size(count), _capacity(count),
 			_alloc(alloc) {
 		_mem = _alloc.allocate(_capacity);
-		//_memend = _mem + _capacity;
 		_max = std::numeric_limits<size_type>::max();
 	}
 	template <class InputIt>
@@ -76,7 +71,6 @@ public:
 			std::copy(first, last, _mem);
 		else std::reverse_copy(first, last, _mem);
 		_size = _capacity = dist;
-		//_memend = _mem + _capacity;
 		_max = std::numeric_limits<size_type>::max();
 	}
 	~vector() {
@@ -130,12 +124,11 @@ public:
 		_mem = new_mem;
 		_capacity = new_cap;
 		_size = new_size;
-		//_memend = _mem + _capacity;
 	}
 // double size
 	void	double_cap() {
 		pointer new_mem = _alloc.allocate(_capacity * 2);
-		std::copy(memfirst(), memlast(), new_mem);
+		std::copy(mem(), memend(), new_mem);
 		update_mem(new_mem, _capacity * 2, _size);
 	}
 // reserve 
@@ -185,35 +178,40 @@ public:
 	}
 // iterators 
 // begin
-	iterator begin() const { return iterator(memfirst()); }
+	iterator begin() const { return iterator(mem()); }
 // end
-	iterator end() const { return iterator(memlast()); }
+	iterator end() const { return iterator(memend()); }
 // rbegin
-	rev_iterator rbegin() const { return rev_iterator(memlast() - 1); }
+	rev_iterator rbegin() const { return rev_iterator(memend() - 1); }
 // rend
-	rev_iterator rend() const { return rev_iterator(memfirst() - 1); }
+	rev_iterator rend() const { return rev_iterator(mem() - 1); }
 // insert 
 	iterator insert(iterator pos, const_reference value) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid pos in insert().1");
-		if (size() + 1 == capacity())
+		if (size() == capacity())
 			double_cap();
 		std::copy_backward(pos, end(), end() + 1);
 		*pos = value;
+		_size += 1;
 		return pos;
 	}
 	iterator insert(iterator pos, size_type count, const_reference value) {
-		/*
+		if (pos < begin() || pos > end())
+			throw std::out_of_range("Invalid iterator(s) in insert().2");
 		if (count == 0) return pos;
-		if (pos - count < begin() || pos >= end())
-			throw std::out_of_range("Invalid pos in insert().2");
-		difference_type dist = std::distance(begin(), pos - count);
-		pointer new_mem = brain.allocate(capacity() + count);
-		std::copy(begin(), pos - count, new_mem);
-		std::fill(new_mem + dist, new_mem + dist + count, value);
-		std::copy(pos, end(), new_mem);
-		brain.update_mem(new_mem, capacity() + count, size() + count);
-		*/
+		if (count + _size > _capacity) {
+			difference_type block = std::distance(begin(), pos);
+			pointer new_mem = _alloc.allocate(_size + count);
+			if (begin() < pos) std::copy(begin(), pos, new_mem);
+			std::fill(pos, pos + count, value);
+			if (pos < end()) std::copy(pos + count, end(), new_mem + count + block);
+			update_mem(new_mem, _size + count, _size + count);
+		} else {
+			std::copy_backward(pos, pos + count, memend() + count);
+			std::fill(pos, pos + count, value);
+			_size += count;
+		}
 	}
 	template <class InputIt>
 	void	insert(iterator pos, InputIt first, InputIt last) {
@@ -223,7 +221,7 @@ public:
 		if (dist == 0) return;
 		if (dist + _size > _capacity) {
 			difference_type block = std::distance(begin(), pos);
-			pointer new_mem = _alloc.allocate(size() + dist);
+			pointer new_mem = _alloc.allocate(_size + dist);
 			if (begin() < pos) std::copy(begin(), pos, new_mem);
 			std::copy(first, last, new_mem + block);
 			if (pos < end()) std::copy(pos + dist, end(), new_mem + block + dist);
@@ -259,15 +257,15 @@ public:
 	}
 // push_back 
 	void push_back(const_reference value) {
-		if (size() + 1 >= capacity())
+		if (_size == _capacity)
 			double_cap();
 		set_memlast(value);
 		inc_size();
 	}
 // pop_back 
 	void pop_back() {
-		if (empty()) return; // or exception?
-		destroy(memlast());
+		if (empty()) return; // std::vector does not perform this check. should the ft:: one be better?
+		destroy(memend());
 		dec_size();
 	}
 // accessors 
@@ -281,7 +279,6 @@ public:
 // modifiers 
 	void	set_mem(const_reference value) { *_mem = value; }
 	void	set_memlast(const_reference value) { *(_mem + _size) = value; }
-	//void	set_memend(const_reference value) { *_memend = value; }
 	void	set_size(size_type new_size) { _size = new_size; }
 	void	set_cap(size_type new_cap) { _capacity = new_cap; }
 	void	inc_size() { ++_size; }
