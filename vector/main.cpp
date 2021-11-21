@@ -32,6 +32,18 @@ void	test1()
 	print(a);
 	cout << "a size: " << a.size() << '\n';
 	cout << "a capacity: " << a.capacity() << '\n';
+	a.pop_back(); cout << "pop\n";
+	print(a);
+	cout << "a size: " << a.size() << '\n';
+	cout << "a capacity: " << a.capacity() << '\n';
+	a.pop_back(); cout << "pop\n";
+	print(a);
+	cout << "a size: " << a.size() << '\n';
+	cout << "a capacity: " << a.capacity() << '\n';
+	a.pop_back(); cout << "pop\n";
+	print(a);
+	cout << "a size: " << a.size() << '\n';
+	cout << "a capacity: " << a.capacity() << '\n';
 }
 
 void	test2()

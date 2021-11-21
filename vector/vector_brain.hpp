@@ -1,12 +1,13 @@
-#pragma		once
-#include	<algorithm>
-#include	<limits>
-#include	"vector_iterator.hpp"
+#pragma	 once
+#include <algorithm>
+#include <limits>
+#include "vector_iterator.hpp"
 
 namespace ft {
 
 template <class vector>
 class vector_brain {
+
 public:
 // member types declarations 
 	typedef typename vector::allocator_type		allocator_type;
@@ -115,6 +116,7 @@ public:
 	void	set_cap(size_type new_cap) { _capacity = new_cap; }
 	void	inc_size() { ++_size; }
 	void	dec_size() { --_size; }
+
 }; // ! class vector_brain
 
 } // ! namespace ft
