@@ -97,6 +97,7 @@ public:
 	typedef vector_const_iterator		const_iterator;
 	typedef typename trait::iterator_category iterator_category;
 protected:
+// pointer 
 	pointer	m_Ptr;
 public:
 // ctors, =, dtor 
@@ -179,6 +180,7 @@ public:
 	typedef vector_reverse_iterator		reverse_iterator;
 	typedef typename trait::iterator_category iterator_category;
 protected:
+// pointer 
 	pointer	m_Ptr;
 public:
 // ctors, =, dtor 
@@ -259,6 +261,7 @@ public:
 	typedef typename vector::difference_type	difference_type;
 	typedef typename vector::size_type		size_type;
 protected:
+// pointer 
 	pointer	m_Ptr;
 public:
 // default ctor. copy, =, and ~ are left implicit 

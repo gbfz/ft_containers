@@ -3,6 +3,8 @@
 #include <limits>
 #include "vector_iterator.hpp"
 
+#include <iostream> // XXX XXX XXX
+
 namespace ft {
 
 template < typename T, class Alloc = std::allocator<T> >
@@ -27,32 +29,34 @@ protected:
 // member fields 
 	allocator_type	_alloc;
 	pointer		_mem;
-	pointer		_memend;
+	//pointer		_memend;
 	size_type	_size;
 	size_type	_capacity;
 	difference_type	_max;
+	pointer		memfirst() const { return _mem; }
+	pointer		memlast() const { return _mem + _size; }
 public:
 // constructors 
 	vector(): _alloc(allocator_type()),
 		  _size(0), _capacity(2) {
 		_mem = _alloc.allocate(_capacity);
-		_memend = _mem;
-		_max = std::numeric_limits<value_type>::max();
+		//_memend = _mem;
+		_max = std::numeric_limits<size_type>::max();
 	  }
 	vector(const vector& other):
 		_alloc(other.get_allocator()),
 		_size(other._size), _capacity(other._capacity) {
 		_mem = _alloc.allocate(_capacity);
-		_memend = _mem + _capacity;
-		_max = std::numeric_limits<value_type>::max();
+		//_memend = _mem + _capacity;
+		_max = std::numeric_limits<size_type>::max();
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc):
 		_alloc(alloc),
 		_size(0), _capacity(2) {
 		_mem = _alloc.allocate(_capacity);
-		_memend = _mem + _capacity;
-		_max = std::numeric_limits<value_type>::max();
+		//_memend = _mem + _capacity;
+		_max = std::numeric_limits<size_type>::max();
 	}
 	explicit vector(size_type count,
 			const_reference value = value_type(),
@@ -60,8 +64,8 @@ public:
 			_size(count), _capacity(count),
 			_alloc(alloc) {
 		_mem = _alloc.allocate(_capacity);
-		_memend = _mem + _capacity;
-		_max = std::numeric_limits<value_type>::max();
+		//_memend = _mem + _capacity;
+		_max = std::numeric_limits<size_type>::max();
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
@@ -69,8 +73,11 @@ public:
 		difference_type dist = std::distance(first, last);
 		_mem = _alloc.allocate(dist);
 		if (first < last)
-			std::copy(first, last, begin());
-		else std::reverse_copy(first, last, begin());
+			std::copy(first, last, _mem);
+		else std::reverse_copy(first, last, _mem);
+		_size = _capacity = dist;
+		//_memend = _mem + _capacity;
+		_max = std::numeric_limits<size_type>::max();
 	}
 	~vector() {
 		_alloc.deallocate(_mem, _capacity);
@@ -117,18 +124,19 @@ public:
 		_alloc.destroy(p);
 	}
 // update mem
-	void	update_mem(pointer new_mem, size_type new_cap) {
-		if (capacity() != 0)
+	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
+		if (_capacity > 0)
 			_alloc.deallocate(_mem, _capacity);
-		_capacity = new_cap;
 		_mem = new_mem;
-		_memend = _mem + _capacity;
+		_capacity = new_cap;
+		_size = new_size;
+		//_memend = _mem + _capacity;
 	}
 // double size
 	void	double_cap() {
 		pointer new_mem = _alloc.allocate(_capacity * 2);
 		std::copy(memfirst(), memlast(), new_mem);
-		update_mem(new_mem, _capacity * 2);
+		update_mem(new_mem, _capacity * 2, _size);
 	}
 // reserve 
 	void	reserve(size_type new_cap) {
@@ -150,6 +158,12 @@ public:
 		std::copy(begin(), end(), new_mem);
 		std::fill(new_mem + size(), new_mem + count, value);
 		update_mem(new_mem, count, count);
+	}
+// clear 
+	void clear() {
+		for (iterator it = begin(); it < end(); ++it)
+			~(*it)();
+		set_size(0);
 	}
 // at 
 	reference at(size_type pos) {
@@ -175,15 +189,9 @@ public:
 // end
 	iterator end() const { return iterator(memlast()); }
 // rbegin
-	rev_iterator rbegin() const { return rev_iterator(memlast()); }
+	rev_iterator rbegin() const { return rev_iterator(memlast() - 1); }
 // rend
 	rev_iterator rend() const { return rev_iterator(memfirst() - 1); }
-// clear 
-	void clear() {
-		for (iterator it = begin(); it < end(); ++it)
-			~(*it)();
-		set_size(0);
-	}
 // insert 
 	iterator insert(iterator pos, const_reference value) {
 		if (pos < begin() || pos > end())
@@ -209,16 +217,22 @@ public:
 	}
 	template <class InputIt>
 	void	insert(iterator pos, InputIt first, InputIt last) {
-		difference_type dist = std::distance(first, last);
-		if (dist == 0) return;
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().3");
-		pointer new_mem = _alloc.allocate(size() + dist);
-		difference_type block = std::distance(begin(), pos);
-		std::copy(begin(), pos, new_mem);
-		std::copy(first, last, new_mem + block);
-		std::copy(begin() + block, end(), new_mem + block + dist);
-		update_mem(new_mem, size() + dist);
+		difference_type dist = std::distance(first, last);
+		if (dist == 0) return;
+		if (dist + _size > _capacity) {
+			difference_type block = std::distance(begin(), pos);
+			pointer new_mem = _alloc.allocate(size() + dist);
+			if (begin() < pos) std::copy(begin(), pos, new_mem);
+			std::copy(first, last, new_mem + block);
+			if (pos < end()) std::copy(pos + dist, end(), new_mem + block + dist);
+			update_mem(new_mem, _size + dist, _size + dist);
+		} else {
+			std::copy_backward(pos, pos + dist, end() - dist + _size);
+			std::copy(first, last, pos);
+			_size += dist;
+		}
 	}
 // erase 
 	iterator erase(iterator pos) {
@@ -259,8 +273,6 @@ public:
 // accessors 
 	reference	front() const { return *_mem; }
 	reference	back() const { return *(_mem + _size - empty()); }
-	pointer		memfirst() const { return _mem; }
-	pointer		memlast() const { return _mem + _size; }
 	size_type	size() const { return _size; }
 	bool		empty() const { return _size == 0; }
 	size_type	capacity() const { return _capacity; }
@@ -269,7 +281,7 @@ public:
 // modifiers 
 	void	set_mem(const_reference value) { *_mem = value; }
 	void	set_memlast(const_reference value) { *(_mem + _size) = value; }
-	void	set_memend(const_reference value) { *_memend = value; }
+	//void	set_memend(const_reference value) { *_memend = value; }
 	void	set_size(size_type new_size) { _size = new_size; }
 	void	set_cap(size_type new_cap) { _capacity = new_cap; }
 	void	inc_size() { ++_size; }
