@@ -7,18 +7,20 @@ using namespace std;
 // print 
 template <typename T>
 void	print(const std::vector<T>& v) {
+	cout << "std: ";
 	for (typename std::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
 		cout << *it << ' ';
 	cout << '\n';
-	cout << "std: size: " << v.size() << " cap: " << v.capacity() << '\n';
+	cout << "size: " << v.size() << " cap: " << v.capacity() << "\n\n";
 }
 
 template <typename T>
 void	print(const ft::vector<T>& v) {
+	cout << "ft: ";
 	for (typename ft::vector<T>::iterator it = v.begin(); it < v.end(); ++it)
 		cout << *it << ' ';
 	cout << '\n';
-	cout << "ft: size: " << v.size() << " cap: " << v.capacity() << '\n';
+	cout << "size: " << v.size() << " cap: " << v.capacity() << "\n\n";
 }
 
 void	test1() // push, pop 
@@ -45,6 +47,12 @@ void	test2() // insert, erase
 
 	a.insert(a.begin(), 3);
 	b.insert(b.begin(), 3);
+	print(a), print(b);
+	a.insert(a.end(), 15);
+	b.insert(b.end(), 15);
+	print(a), print(b);
+	a.insert(a.end(), 100);
+	b.insert(b.end(), 100);
 	print(a), print(b);
 }
 

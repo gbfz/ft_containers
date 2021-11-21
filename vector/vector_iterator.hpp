@@ -25,6 +25,7 @@ public:
 	 vector_iterator(const iterator& other): m_Ptr(other.m_Ptr) {}
 	 iterator& operator = (const iterator& other) {
 		 m_Ptr = other.m_Ptr;
+		 return *this;
 	 }
 	 ~vector_iterator() {}
 // *, ->, [] 
