@@ -20,11 +20,12 @@ public:
 	typedef const value_type&	const_reference;
 	typedef std::size_t		size_type;
 	typedef std::ptrdiff_t		difference_type;
-	typedef vector_iterator < ft::vector<T> >		iterator;
-	typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
+	typedef vector_iterator < vector<T> >			iterator;
+	//typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
 	typedef vector_const_iterator < vector<T> >		const_iterator;
-	typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
+	//typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
 	typedef std::random_access_iterator_tag			iterator_category;
+
 protected:
 // member fields 
 	allocator_type	_alloc;
@@ -61,11 +62,13 @@ protected:
 	}
 // double the capacity 
 	void	double_cap() {
-		//reserve(_capacity * 2);
+		reserve(_capacity * 2);
 		//resize(_capacity * 2);
+		/*
 		pointer new_mem = _alloc.allocate(_capacity * 2);
 		std::copy(_mem, _mem + _size, new_mem);
 		update_mem(new_mem, _capacity * 2, _size);
+		*/
 	}
 public:
 // constructors 
@@ -93,10 +96,10 @@ public:
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
 			const Alloc& alloc = Alloc()) {
-		_mem = _alloc.allocate(std::distance(first, last));
+		_mem = _alloc.allocate(ft::distance(first, last));
 		if (first < last) std::copy(first, last, _mem);
 		else std::reverse_copy(first, last, _mem);
-		_size = _capacity = std::distance(first, last);
+		_size = _capacity = ft::distance(first, last);
 	}
 	~vector() {
 		_alloc.deallocate(_mem, _capacity);
@@ -116,7 +119,7 @@ public:
 	}
 	template <class InputIt>
 	void	assign(InputIt first, InputIt last) {
-		difference_type dist = std::distance(first, last);
+		difference_type dist = ft::distance(first, last);
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		pointer new_mem = _alloc.allocate(dist);
@@ -129,28 +132,27 @@ public:
 // memory 
 // reserve 
 	void	reserve(size_type new_cap) {
-		if (_capacity == max_size())
-			throw std::length_error("Cannot reserve more memory");
+		if (new_cap >= max_size())
+			throw std::length_error("Cannot reserve given amount of memory");
 		if (new_cap <= capacity()) return;
-		if (new_cap > max_size()) new_cap = max_size();
 		pointer new_mem = _alloc.allocate(new_cap);
-		std::copy(begin(), end(), new_mem);
-		std::fill(new_mem + _size, new_mem + new_cap, value_type()); // XXX ???
+		std::copy(_mem, _mem + _size, new_mem);
+		//std::copy(begin(), end(), new_mem);
+		//std::fill(new_mem + _size, new_mem + new_cap, value_type()); // XXX ???
 		update_mem(new_mem, new_cap, size());
 	}
 // resize 
 	void	resize(size_type count, value_type value = value_type()) {
-		if (_capacity == max_size())
-			throw std::length_error("Cannot resize more");
-		if (count <= size()) {
+		if (_capacity + count >= max_size())
+			throw std::length_error("Cannot resize to given amount");
+		if (count < _size) {
 			destroy(begin() + count, end());
 			set_size(count);
 			return;
 		}
-		if (count > max_size()) count = max_size();
 		pointer new_mem = _alloc.allocate(count);
-		std::copy(begin(), end(), new_mem);
-		std::fill(new_mem + size(), new_mem + count, value);
+		std::copy(_mem, _mem + _size, new_mem);
+		std::fill(new_mem + _size, new_mem + count, value);
 		update_mem(new_mem, count, count);
 	}
 // clear 
@@ -183,14 +185,14 @@ public:
 // end
 	iterator end() const { return iterator(_mem + _size); }
 // rbegin
-	rev_iterator rbegin() const { return rev_iterator(_mem + _size - 1); }
+	//rev_iterator rbegin() const { return rev_iterator(_mem + _size - 1); }
 // rend
-	rev_iterator rend() const { return rev_iterator(_mem - 1); }
+	//rev_iterator rend() const { return rev_iterator(_mem - 1); }
 // insert 
 	iterator insert(iterator pos, const_reference value) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid pos in insert().1");
-		difference_type offset = std::distance(pos, begin());
+		difference_type offset = ft::distance(pos, begin());
 		if (_size == _capacity)
 			double_cap();
 		pos = begin() + offset;
@@ -202,9 +204,8 @@ public:
 	void	insert(iterator pos, size_type count, const_reference value) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().2");
-		if (count == 0)
-			return pos;
-		difference_type offset = std::distance(pos, begin());
+		if (count == 0) return pos;
+		difference_type offset = ft::distance(pos, begin());
 		if (_size + count >= _capacity)
 			double_cap();
 		pos = begin() + offset;
@@ -216,10 +217,9 @@ public:
 	void	insert(iterator pos, InputIt first, InputIt last) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().3");
-		if (first == last)
-			return;
-		size_type count = std::distance(first, last);
-		difference_type offset = std::distance(pos, begin());
+		if (first == last) return;
+		size_type count = ft::distance(first, last);
+		difference_type offset = ft::distance(pos, begin());
 		if (_size + count >= _capacity)
 			double_cap();
 		pos = begin() + offset;
@@ -245,7 +245,7 @@ public:
 			throw std::out_of_range("Invalid iterators in erase.2");
 		if (first == last)
 			return last;
-		difference_type dist = std::distance(first, last);
+		difference_type dist = ft::distance(first, last);
 		pointer new_mem = _alloc.allocate(capacity() - dist);
 		std::copy(begin(), first, new_mem);
 		std::copy(last, end(), new_mem);
