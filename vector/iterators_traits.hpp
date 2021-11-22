@@ -12,7 +12,7 @@ struct iterators_traits {
 	typedef typename _container::pointer		pointer;
 	typedef typename _container::reference		reference;
 	typedef typename _container::difference_type	difference_type;
-};
+}; // ! iterators traits
 
 template <typename T>
 struct iterators_traits<T*> {
