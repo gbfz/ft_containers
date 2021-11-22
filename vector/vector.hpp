@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <limits>
 #include "vector_iterator.hpp"
+//#include "old_vector_iterator.hpp"
 
 #include <iostream> // XXX XXX XXX
 
@@ -36,7 +37,7 @@ protected:
 	 pointer	allocate(size_type amount) {
 		if (amount == 0) return 0;
 		if (amount > max_size())
-			throw std::length_error("Too much to realloc");
+			throw std::length_error("Attemp to allocate too much");
 		return _alloc.allocate(amount);
 	}
 // deallocate
@@ -82,8 +83,7 @@ public:
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc): // {
-		_alloc(alloc),
-		_size(0), _capacity(1) {
+		_alloc(alloc), _size(0), _capacity(1) {
 		_mem = _alloc.allocate(_capacity);
 	}
 	explicit vector(size_type count,
@@ -110,7 +110,7 @@ public:
 		std::copy(other.begin(), other.end(), new_mem);
 		update_mem(new_mem, _capacity);
 	}
-// assign 
+// assign // XXX: perhaps it shouldn't reallocate? need to check 
 	void	assign(size_type count,	const_reference value) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
@@ -262,7 +262,7 @@ public:
 // pop_back 
 	void pop_back() {
 		if (empty()) return; // std::vector does not perform this check. should the ft:: one be better?
-		destroy(_mem + _size);
+		destroy(end() - 1); // what...
 		_size -= 1;
 	}
 // accessors 

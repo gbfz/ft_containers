@@ -33,6 +33,7 @@ void	test1() // push, pop
 	a.push_back('c'); b.push_back('d'); cout << "push\n";
 	print(a); print(b);
 	a.pop_back(); b.pop_back(); cout << "pop\n";
+	cout << *(a.begin() + 1) << " !!!!\n";
 	print(a); print(b);
 	a.pop_back(); b.pop_back(); cout << "pop\n";
 	print(a); print(b);
@@ -71,5 +72,5 @@ void do_distance() {
 
 int main()
 {
-	test2();
+	test1();
 }

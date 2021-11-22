@@ -1,174 +1,172 @@
 #pragma  once
 #include <memory>
 #include <stdexcept>
-#include "iterators_traits.hpp"
+#include "iterator_traits.hpp"
+
+#include <iostream> // TODO: DELETE 
 
 namespace ft {
 
 // std::distance analog 
-template <class iterator>
+template <typename iterator>
 typename iterator::difference_type
 distance(iterator first, iterator last) {
-	if (first < last) return first - last;
-	else return last - first;
+	std::cout << "HERE FOR SOME REASON\n";
+	typename iterator::difference_type result = 0;
+	if (first < last) while (first < last) { ++first; ++result; }
+	else while (last < first) { ++last; ++result; }
+	return result;
 }
 
-// normal iterator 
-template <typename vector>
+template <typename iterator>
+typename iterator::difference_type
+distance(iterator first, iterator last, std::random_access_iterator_tag) {
+	return last - first; // or vice versa?
+}
+
+// iterator 
+template <typename _iterator> // could be a pointer or an iterator of different type or whatever 
 class vector_iterator {
+// type name shortcut 
+typedef vector_iterator	iterator;
 public:
-// member type definitions 
-	typedef iterators_traits<vector>		traits;
+// member types definitions 
+	typedef iterator_traits<_iterator>		traits;
 	typedef typename traits::iterator_category	iterator_category;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
 	typedef typename traits::reference		reference;
 	typedef typename traits::difference_type	difference_type;
-	typedef vector_iterator				iterator;
 protected:
-// pointer
+// pointer 
 	pointer m_Ptr;
 public:
-// ctors, dtor, = 
+// ctors, =, dtor 
+	vector_iterator(): m_Ptr(0) {}
 	vector_iterator(pointer ptr): m_Ptr(ptr) {}
 	vector_iterator(const iterator& other): m_Ptr(other.m_Ptr) {}
-	~vector_iterator() {}
 	iterator& operator = (const iterator& other) {
+		if (this == &other) return *this;
 		m_Ptr = other.m_Ptr;
 		return *this;
 	}
+	~vector_iterator() {}
 // *, ->, [] 
 	reference operator * () const { return *m_Ptr; }
-	pointer operator -> () const { return m_Ptr; }
-	reference operator [] (difference_type offset) const {
-		return *(m_Ptr + offset);
-	}
+	pointer   operator -> () const { return m_Ptr; }
+	reference operator [] (difference_type i) { return *(m_Ptr + i); }
 // ++ 
 	iterator& operator ++ () { ++m_Ptr; return *this; }
 	iterator  operator ++ (int) {
-		iterator it = *this;
+		pointer inc = m_Ptr;
 		++(*this);
-		return it;
-	}
-// + 
-	iterator operator + (difference_type offset) const {
-		return iterator(m_Ptr + offset);
+		return iterator(inc);
 	}
 // -- 
 	iterator& operator -- () { --m_Ptr; return *this; }
 	iterator  operator -- (int) {
-		iterator it = *this;
+		pointer dec = m_Ptr;
 		--(*this);
-		return it;
+		return iterator(dec);
 	}
-// - 
-	iterator operator - (difference_type offset) const {
-		return iterator(m_Ptr - offset);
-	}
-	difference_type operator - (const iterator& other) const
-	{
-		difference_type n = std::distance(m_Ptr, other.m_Ptr);
-		if (*this + n != other)
-			throw std::out_of_range("Invalid iterator in - (2)");
-		return n;
+// offset sum, difference 
+	iterator operator + (difference_type off) /* const */ { return iterator(m_Ptr + off); }
+	iterator operator - (difference_type off) /* const */ { return iterator(m_Ptr - off); }
+// iterator difference 
+	difference_type operator - (const iterator& other) {
+		return m_Ptr - other.m_Ptr;
 	}
 // +=, -= 
-	reference operator += (difference_type offs) {
-		if (offs >= 0) while (offs--) ++(*this);
-		else while (offs++) --(*this);
+	iterator& operator += (difference_type off) {
+		if (off >= 0) while (--off) ++(*this);
+		else while (++off) --(*this);
 		return *this;
 	}
-	reference operator -= (difference_type offs) {
-		if (offs >= 0) while (offs--) --(*this);
-		else while (offs++) ++(*this);
+	iterator& operator -= (difference_type off) {
+		if (off >= 0) while (--off) --(*this);
+		else while (++off) ++(*this);
 		return *this;
 	}
-// <, >, <=, >=, ==, != 
-	bool operator < (const iterator& other) const { return m_Ptr < other.m_Ptr; }
-	bool operator > (const iterator& other) const { return m_Ptr > other.m_Ptr; }
-	bool operator <= (const iterator& other) const { return m_Ptr <= other.m_Ptr; }
-	bool operator >= (const iterator& other) const { return m_Ptr >= other.m_Ptr; }
+// comparison 
 	bool operator == (const iterator& other) const { return m_Ptr == other.m_Ptr; }
 	bool operator != (const iterator& other) const { return m_Ptr != other.m_Ptr; }
-}; // ! normal iterator
+	bool operator < (const iterator& other) const { return m_Ptr < other.m_Ptr; }
+	bool operator <= (const iterator& other) const { return m_Ptr <= other.m_Ptr; }
+	bool operator > (const iterator& other) const { return m_Ptr > other.m_Ptr; }
+	bool operator >= (const iterator& other) const { return m_Ptr >= other.m_Ptr; }
+}; // ! class vector iterator
 
 // const iterator 
-template <typename vector>
+template <typename _iterator>
 class vector_const_iterator {
+// type name shortcut 
+typedef vector_const_iterator	const_iterator;
 public:
-// member type definitions 
-	typedef iterators_traits<vector>		traits;
+// member types definitions 
+	typedef iterator_traits<_iterator>		traits;
 	typedef typename traits::iterator_category	iterator_category;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
-	typedef typename traits::reference		reference;
+	typedef const typename traits::pointer		const_pointer;
+	typedef const typename traits::reference	const_reference;
 	typedef typename traits::difference_type	difference_type;
-	typedef vector_const_iterator			const_iterator;
 protected:
-// pointer
+// pointer 
 	pointer m_Ptr;
 public:
-// ctors, dtor, = 
+// ctors, =, dtor 
 	vector_const_iterator(): m_Ptr(0) {}
-	vector_const_iterator(pointer ptr): m_Ptr(ptr) {}
+	vector_const_iterator(const_pointer ptr): m_Ptr(ptr) {}
 	vector_const_iterator(const const_iterator& other): m_Ptr(other.m_Ptr) {}
-	~vector_const_iterator() {}
 	const_iterator& operator = (const const_iterator& other) {
+		if (this == &other) return *this;
 		m_Ptr = other.m_Ptr;
+		return *this;
 	}
+	~vector_const_iterator() {}
 // *, ->, [] 
-	const reference operator * () const { return *m_Ptr; }
-	const pointer operator -> () const { return m_Ptr; }
-	const reference operator [] (difference_type offset) const {
-		return *(m_Ptr + offset);
-	}
+	const_reference operator * () const { return *m_Ptr; }
+	const_pointer   operator -> () const { return m_Ptr; }
+	const_reference operator [] (difference_type i) const { return *(m_Ptr + i); }
 // ++ 
 	const_iterator& operator ++ () { ++m_Ptr; return *this; }
 	const_iterator  operator ++ (int) {
-		const_iterator it = *this;
+		const_pointer inc = m_Ptr;
 		++(*this);
-		return it;
-	}
-// + 
-	const_iterator operator + (difference_type offset) const {
-		return const_iterator(m_Ptr + offset);
+		return const_iterator(inc);
 	}
 // -- 
 	const_iterator& operator -- () { --m_Ptr; return *this; }
 	const_iterator  operator -- (int) {
-		const_iterator it = *this;
+		const_pointer dec = m_Ptr;
 		--(*this);
-		return it;
+		return const_iterator(dec);
 	}
-// - 
-	const_iterator operator - (difference_type offset) const {
-		return const_iterator(m_Ptr - offset);
-	}
-	difference_type operator - (const const_iterator& other) const
-	{
-		difference_type n = std::distance(m_Ptr, other.m_Ptr);
-		if (*this + n != other)
-			throw std::out_of_range("Invalid iterator in - (2)");
-		return n;
+// offset sum, difference 
+	const_iterator operator + (difference_type off) /* const */ { return const_iterator(m_Ptr + off); }
+	const_iterator operator - (difference_type off) /* const */ { return const_iterator(m_Ptr - off); }
+// iterator difference 
+	difference_type operator - (const const_iterator& other) {
+		return m_Ptr - other.m_Ptr;
 	}
 // +=, -= 
-	const reference operator += (difference_type offs) {
-		if (offs >= 0) while (offs--) ++(*this);
-		else while (offs++) --(*this);
+	const_iterator& operator += (difference_type off) {
+		if (off >= 0) while (--off) ++(*this);
+		else while (++off) --(*this);
 		return *this;
 	}
-	const reference operator -= (difference_type offs) {
-		if (offs >= 0) while (offs--) --(*this);
-		else while (offs++) ++(*this);
+	const_iterator& operator -= (difference_type off) {
+		if (off >= 0) while (--off) --(*this);
+		else while (++off) ++(*this);
 		return *this;
 	}
-// <, >, <=, >=, ==, != 
-	bool operator < (const const_iterator& other) const { return m_Ptr < other.m_Ptr; }
-	bool operator > (const const_iterator& other) const { return m_Ptr > other.m_Ptr; }
-	bool operator <= (const const_iterator& other) const { return m_Ptr <= other.m_Ptr; }
-	bool operator >= (const const_iterator& other) const { return m_Ptr >= other.m_Ptr; }
+// comparison 
 	bool operator == (const const_iterator& other) const { return m_Ptr == other.m_Ptr; }
 	bool operator != (const const_iterator& other) const { return m_Ptr != other.m_Ptr; }
-}; // ! const iterator
+	bool operator < (const const_iterator& other) const { return m_Ptr < other.m_Ptr; }
+	bool operator <= (const const_iterator& other) const { return m_Ptr <= other.m_Ptr; }
+	bool operator > (const const_iterator& other) const { return m_Ptr > other.m_Ptr; }
+	bool operator >= (const const_iterator& other) const { return m_Ptr >= other.m_Ptr; }
+}; // ! class vector const_iterator
 
 } // ! namespace ft
