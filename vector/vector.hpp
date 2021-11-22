@@ -44,12 +44,12 @@ protected:
 		_alloc.deallocate(_mem, _capacity);
 	}
 // destroy
-	void	destroy(pointer p) {
-		_alloc.destroy(p);
+	void	destroy(const iterator& p) {
+		_alloc.destroy(&(*p));
 	}
-	void	destroy(iterator first, iterator last) {
-		for (; first < last; ++first)
-			destroy(&*first);
+	void	destroy(const iterator& first, const iterator& last) {
+		for (iterator it(first); it < last; ++it)
+			destroy(it);
 	}
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
@@ -89,7 +89,7 @@ public:
 	explicit vector(size_type count,
 			const_reference value = value_type(),
 			const Alloc& alloc = Alloc()): // {
-		_size(count), _capacity(count), _alloc(alloc) {
+		_alloc(alloc), _size(count), _capacity(count) {
 		_mem = _alloc.allocate(_capacity);
 		std::fill(_mem, _mem + _size, value);
 	}
@@ -146,8 +146,8 @@ public:
 		if (_capacity + count >= max_size())
 			throw std::length_error("Cannot resize to given amount");
 		if (count < _size) {
-			destroy(begin() + count, end());
-			set_size(count);
+			destroy(_mem + count, _mem + _size);
+			_size = count;
 			return;
 		}
 		pointer new_mem = _alloc.allocate(count);
@@ -159,7 +159,7 @@ public:
 	void clear() {
 		for (iterator it = begin(); it < end(); ++it)
 			destroy(it);
-		set_size(0);
+		_size = 0;
 	}
 // at 
 	reference at(size_type pos) {
@@ -181,9 +181,11 @@ public:
 	}
 // iterators 
 // begin
-	iterator begin() const { return iterator(_mem); }
+	iterator begin() { return iterator(_mem); }
+	const_iterator begin() const { return const_iterator(_mem); }
 // end
-	iterator end() const { return iterator(_mem + _size); }
+	iterator end() { return iterator(_mem + _size); }
+	const_iterator end() const { return const_iterator(_mem + _size); }
 // rbegin
 	//rev_iterator rbegin() const { return rev_iterator(_mem + _size - 1); }
 // rend
@@ -235,35 +237,33 @@ public:
 			throw std::out_of_range("Invalid iterator in erase.1");
 		if (size() == 0)
 			throw std::length_error("Erasing element of empty vector");
-		_destroy(*pos);
+		destroy(pos);
 		std::copy(pos + 1, end(), pos);
-		dec_size();
+		_size -= 1;
 		return pos + 1;
 	}
 	iterator erase(iterator first, iterator last) {
 		if (first < begin() || last > end())
 			throw std::out_of_range("Invalid iterators in erase.2");
-		if (first == last)
-			return last;
-		difference_type dist = ft::distance(first, last);
-		pointer new_mem = _alloc.allocate(capacity() - dist);
-		std::copy(begin(), first, new_mem);
-		std::copy(last, end(), new_mem);
-		std::for_each(first, last, this->destroy);
-		update_mem(new_mem, capacity() - dist, size() - dist);
+		if (first == last) return last;
+		iterator pos = last == end() ? end() : last + 1;
+		destroy(first, last);
+		std::copy(last, end(), first);
+		_size -= ft::distance(first, last);
+		return pos;
 	}
 // push_back 
 	void push_back(const_reference value) {
 		if (_size == _capacity)
 			double_cap();
-		set_memlast(value);
-		inc_size();
+		*(_mem + _size) = value;
+		_size += 1;
 	}
 // pop_back 
 	void pop_back() {
 		if (empty()) return; // std::vector does not perform this check. should the ft:: one be better?
 		destroy(_mem + _size);
-		dec_size();
+		_size -= 1;
 	}
 // accessors 
 	reference	front() const { return *_mem; }
@@ -273,13 +273,6 @@ public:
 	size_type	capacity() const { return _capacity; }
 	size_type	max_size() const { return std::numeric_limits<size_type>::max(); }
 	allocator_type	get_allocator() const { return _alloc; }
-// modifiers 
-	void	set_mem(const_reference value) { *_mem = value; }
-	void	set_memlast(const_reference value) { *(_mem + _size) = value; }
-	void	set_size(size_type new_size) { _size = new_size; }
-	void	set_cap(size_type new_cap) { _capacity = new_cap; }
-	void	inc_size() { ++_size; }
-	void	dec_size() { --_size; }
 
 }; // ! class vector
 

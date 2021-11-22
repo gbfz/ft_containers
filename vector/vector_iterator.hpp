@@ -5,10 +5,12 @@
 
 namespace ft {
 
+// std::distance analog 
 template <class iterator>
 typename iterator::difference_type
 distance(iterator first, iterator last) {
-	return last - first;
+	if (first < last) return first - last;
+	else return last - first;
 }
 
 // normal iterator 

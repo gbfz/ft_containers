@@ -1,33 +1,35 @@
-#pragma		once
-#include	<iterator>
+#pragma  once
+#include <stddef.h>
 
 namespace ft {
 
-template <class Iterator>
-struct iterators_traits {
-	typedef typename Iterator::iterator_category	iterator_category;
-	typedef typename Iterator::value_type		value_type;
-	typedef typename Iterator::difference_type	difference_type;
-	typedef typename Iterator::pointer		pointer;
-	typedef typename Iterator::reference		reference;
-}; // ! iterator_traits
+struct random_access_iterator_tag { };
 
-template <class T>
+template <typename _container>
+struct iterators_traits {
+	typedef typename _container::iterator_category	iterator_category;
+	typedef typename _container::value_type		value_type;
+	typedef typename _container::pointer		pointer;
+	typedef typename _container::reference		reference;
+	typedef typename _container::difference_type	difference_type;
+};
+
+template <typename T>
 struct iterators_traits<T*> {
-	typedef std::random_access_iterator_tag	iterator_category;
+	typedef random_access_iterator_tag	iterator_category;
 	typedef T				value_type;
-	typedef std::ptrdiff_t			difference_type;
 	typedef T*				pointer;
 	typedef T&				reference;
-}; // ! iterators_traits<T*>
+	typedef ptrdiff_t			difference_type;
+}; // ! iterators traits<T*>
 
-template <class T>
+template <typename T>
 struct iterators_traits<const T*> {
-	typedef std::random_access_iterator_tag	iterator_category;
+	typedef random_access_iterator_tag	iterator_category;
 	typedef T				value_type;
-	typedef std::ptrdiff_t			difference_type;
 	typedef const T*			pointer;
 	typedef const T&			reference;
-}; // ! iterators_traits<const T*>
+	typedef ptrdiff_t			difference_type;
+}; // ! iterators traits<const T*>
 
 } // ! namespace ft

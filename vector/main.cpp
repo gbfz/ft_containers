@@ -17,7 +17,7 @@ void	print(const std::vector<T>& v) {
 template <typename T>
 void	print(const ft::vector<T>& v) {
 	cout << "ft: ";
-	for (typename ft::vector<T>::iterator it = v.begin(); it < v.end(); ++it)
+	for (typename ft::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
 		cout << *it << ' ';
 	cout << '\n';
 	cout << "size: " << v.size() << " cap: " << v.capacity() << "\n\n";
@@ -54,6 +54,19 @@ void	test2() // insert, erase
 	a.insert(a.end(), 100);
 	b.insert(b.end(), 100);
 	print(a), print(b);
+	b.erase(b.end() - 1);
+	a.erase(a.end() - 1);
+	print(a), print(b);
+	b.erase(b.begin(), b.end());
+	a.erase(a.begin(), a.end());
+	print(a), print(b);
+}
+
+void do_distance() {
+	std::vector<int> a(15);
+	ft::vector<int> b(15);
+	cout << std::distance(a.begin(), a.end()) << '\n';
+	cout << ft::distance(b.begin(), b.end()) << '\n';
 }
 
 int main()
