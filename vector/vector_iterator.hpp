@@ -3,26 +3,7 @@
 #include <stdexcept>
 #include "iterator_traits.hpp"
 
-#include <iostream> // TODO: DELETE 
-
 namespace ft {
-
-// std::distance analog 
-template <typename iterator>
-typename iterator::difference_type
-distance(iterator first, iterator last) {
-	std::cout << "HERE FOR SOME REASON\n";
-	typename iterator::difference_type result = 0;
-	if (first < last) while (first < last) { ++first; ++result; }
-	else while (last < first) { ++last; ++result; }
-	return result;
-}
-
-template <typename iterator>
-typename iterator::difference_type
-distance(iterator first, iterator last, std::random_access_iterator_tag) {
-	return last - first; // or vice versa?
-}
 
 // iterator 
 template <typename _iterator> // could be a pointer or an iterator of different type or whatever 

@@ -4,13 +4,16 @@
 
 namespace ft {
 
-template <typename _container>
+template <typename iterator>
+struct iterator_traits;
+
+template <typename iterator>
 struct iterator_traits {
-	typedef typename _container::iterator_category	iterator_category;
-	typedef typename _container::value_type		value_type;
-	typedef typename _container::pointer		pointer;
-	typedef typename _container::reference		reference;
-	typedef typename _container::difference_type	difference_type;
+	typedef typename iterator::iterator_category	iterator_category;
+	typedef typename iterator::value_type		value_type;
+	typedef typename iterator::pointer		pointer;
+	typedef typename iterator::reference		reference;
+	typedef typename iterator::difference_type	difference_type;
 }; // ! iterator traits
 
 template <typename T>

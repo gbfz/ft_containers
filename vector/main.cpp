@@ -33,7 +33,6 @@ void	test1() // push, pop
 	a.push_back('c'); b.push_back('d'); cout << "push\n";
 	print(a); print(b);
 	a.pop_back(); b.pop_back(); cout << "pop\n";
-	cout << *(a.begin() + 1) << " !!!!\n";
 	print(a); print(b);
 	a.pop_back(); b.pop_back(); cout << "pop\n";
 	print(a); print(b);
@@ -63,14 +62,28 @@ void	test2() // insert, erase
 	print(a), print(b);
 }
 
-void do_distance() {
-	std::vector<int> a(15);
-	ft::vector<int> b(15);
-	cout << std::distance(a.begin(), a.end()) << '\n';
-	cout << ft::distance(b.begin(), b.end()) << '\n';
+void	test3() { // resize 
+	ft::vector<string> a;
+	std::vector<string> b;
+
+	a.resize(4, "hey");
+	b.resize(4, "hey");
+	print(a), print(b);
+	a.resize(0);
+	b.resize(0);
+	print(a), print(b);
+	try { a.resize(-5);
+	} catch (...) {}
+	try { a.resize(5000000000000000000);
+	} catch (...) {}
+	try { a.resize(69, "nice\n");
+	} catch (...) {}
+	print(a);
+	a.erase(a.begin() + 42);
+	print(a);
 }
 
 int main()
 {
-	test1();
+	test3();
 }
