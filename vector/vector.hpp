@@ -1,13 +1,12 @@
 #pragma  once
 #include <algorithm>
-#include <limits>
 #include "vector_iterator.hpp"
 
 #include <iostream> // :))
 
 namespace ft {
 
-template < typename T, class Alloc = std::allocator<T> >
+template <typename T, class Alloc = std::allocator<T> >
 class vector {
 
 public:
@@ -18,10 +17,10 @@ public:
 	typedef const pointer		const_pointer;
 	typedef value_type&		reference;
 	typedef const value_type&	const_reference;
-	typedef std::size_t		size_type;
-	typedef std::ptrdiff_t		difference_type;
-	typedef std::random_access_iterator_tag			iterator_category;
-	typedef vector_iterator <pointer>			iterator;
+	typedef size_t			size_type;
+	typedef ptrdiff_t		difference_type;
+	typedef std::random_access_iterator_tag		iterator_category;
+	typedef vector_iterator <pointer>		iterator;
 	//typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
 	typedef vector_const_iterator <pointer>		const_iterator;
 	//typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
@@ -32,25 +31,6 @@ protected:
 	size_type	_size;
 	size_type	_capacity;
 // memory methods 
-// allocate 
-	 pointer	allocate(size_type amount) {
-		if (amount == 0) return 0;
-		if (amount > max_size())
-			throw std::length_error("Attemp to allocate too much");
-		return _alloc.allocate(amount);
-	}
-// deallocate
-	void	deallocate() {
-		_alloc.deallocate(_mem, _capacity);
-	}
-// destroy
-	void	destroy(const iterator& p) {
-		_alloc.destroy(&(*p));
-	}
-	void	destroy(const iterator& first, const iterator& last) {
-		for (iterator it(first); it < last; ++it)
-			destroy(it);
-	}
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
 		if (_capacity > 0)
@@ -59,15 +39,36 @@ protected:
 		_capacity = new_cap;
 		_size = new_size;
 	}
-// double the capacity 
-	void	double_cap() {
-		reserve(_capacity * 2);
+// construct 
+	void	construct(const iterator& it, const_reference value) {
+		_alloc.construct(&(*it), value);
+	}
+	void	construct(const iterator& first,
+			  const iterator& last,
+			  const_reference value) {
+		for (iterator it(first); it < last; ++it)
+			construct(it, value);
+	}
+// destroy
+	void	destroy(const iterator& it) {
+		_alloc.destroy(&(*it));
+	}
+	void	destroy(const iterator& first, const iterator& last) {
+		for (iterator it(first); it < last; ++it)
+			destroy(it);
+	}
+// make capacity x2
+	void	double_capacity() {
+		reserve((_capacity | !_capacity) * 2);
 	}
 public:
-// constructors 
+// constructors, destructor 
 	vector(): // {
-		_alloc(allocator_type()), _size(0), _capacity(1) {
+		_alloc(allocator_type()), _size(0), _capacity(0) {
+		/*
 		_mem = _alloc.allocate(_capacity);
+		_alloc.construct(_mem, value_type());
+		*/
 	}
 	vector(const vector& other): // {
 		_alloc(other.get_allocator()),
@@ -76,15 +77,17 @@ public:
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc): // {
-		_alloc(alloc), _size(0), _capacity(1) {
-		_mem = _alloc.allocate(_capacity);
+		_alloc(alloc), _size(0), _capacity(0) {
+		//_mem = _alloc.allocate(_capacity);
 	}
 	explicit vector(size_type count,
 			const_reference value = value_type(),
 			const Alloc& alloc = Alloc()): // {
 		_alloc(alloc), _size(count), _capacity(count) {
 		_mem = _alloc.allocate(_capacity);
-		std::fill(_mem, _mem + _size, value);
+		for (pointer p(_mem); p < _mem + _size; ++p) {
+			_alloc.construct(p, value);
+		}
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
@@ -95,20 +98,21 @@ public:
 		_size = _capacity = std::distance(first, last);
 	}
 	~vector() {
-		_alloc.deallocate(_mem, _capacity);
+		if (_capacity) _alloc.deallocate(_mem, _capacity);
 	}
 // = 
 	vector&	operator = (const vector& other) {
+		if (this == &other) return *this;
 		pointer new_mem = other._alloc.allocate(other._capacity);
 		std::copy(other.begin(), other.end(), new_mem);
 		update_mem(new_mem, _capacity);
 	}
-// assign // XXX: perhaps it shouldn't reallocate? need to check 
+// assign 
 	void	assign(size_type count,	const_reference value) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		resize(count);
-		std::fill(begin(), end(), value);
+		construct(begin(), end(), value);
 	}
 	template <class InputIt>
 	void	assign(InputIt first, InputIt last) {
@@ -122,39 +126,43 @@ public:
 			std::reverse_copy(last, first, new_mem);
 		update_mem(new_mem, dist, dist);
 	}
-// memory 
 // reserve 
 	void	reserve(size_type new_cap) {
 		if (new_cap >= max_size())
 			throw std::length_error("Cannot reserve given amount of memory");
 		if (new_cap <= _capacity) return;
 		pointer new_mem = _alloc.allocate(new_cap);
+		construct(new_mem, new_mem + new_cap, value_type()); // XXX: is this correct?
 		std::copy(begin(), end(), new_mem);
-		update_mem(new_mem, new_cap, size());
+		update_mem(new_mem, new_cap, _size);
 	}
 // resize 
 	void	resize(size_type count, value_type value = value_type()) {
 		if (_capacity + count >= max_size())
 			throw std::length_error("Cannot resize to given amount");
+		if (count == _size) return;
 		if (count < _size) {
 			destroy(begin() + count, end());
 			_size = count;
 			return;
 		}
 		pointer new_mem = _alloc.allocate(count);
-		std::copy(begin(), end(), new_mem);
-		for (pointer p(new_mem + _size); p < new_mem + count; ++p) {
-			_alloc.construct(p, value);
-		}
+		construct(new_mem, new_mem + count, value);
+		if (_size) std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, count, count);
 	}
 // clear 
 	void clear() {
-		for (iterator it = begin(); it < end(); ++it)
-			destroy(it);
+		destroy(begin(), end());
 		_size = 0;
 	}
-// at 
+// [], at 
+	reference operator [] (size_type pos) {
+		return _mem[pos];
+	}
+	const_reference operator [] (size_type pos) const {
+		return _mem[pos];
+	}
 	reference at(size_type pos) {
 		if (pos < 0 || pos >= size())
 			throw std::out_of_range("Invalid pos in at()");
@@ -163,13 +171,6 @@ public:
 	const_reference at(size_type pos) const {
 		if (pos < 0 || pos >= size())
 			throw std::out_of_range("Invalid pos in at()");
-		return _mem[pos];
-	}
-// [] 
-	reference operator [] (size_type pos) {
-		return _mem[pos];
-	}
-	const_reference operator [] (size_type pos) const {
 		return _mem[pos];
 	}
 // iterators 
@@ -189,7 +190,7 @@ public:
 			throw std::out_of_range("Invalid pos in insert().1");
 		difference_type offset = std::distance(begin(), pos);
 		if (_size == _capacity)
-			double_cap();
+			double_capacity();
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + 1);
 		*pos = value;
@@ -202,10 +203,10 @@ public:
 		if (count == 0) return pos;
 		difference_type offset = std::distance(begin(), pos);
 		if (_size + count >= _capacity)
-			double_cap();
+			double_capacity();
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
-		std::fill(pos, pos + count, value);
+		construct(pos, pos + count, value);
 		_size += count;
 	}
 	template <class InputIt>
@@ -216,7 +217,7 @@ public:
 		size_type count = std::distance(first, last);
 		difference_type offset = std::distance(begin(), pos);
 		if (_size + count >= _capacity)
-			double_cap();
+			double_capacity();
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
 		if (first < last)
@@ -248,7 +249,7 @@ public:
 // push_back 
 	void push_back(const_reference value) {
 		if (_size == _capacity)
-			double_cap();
+			double_capacity();
 		*(_mem + _size) = value;
 		_size += 1;
 	}
@@ -258,15 +259,60 @@ public:
 		destroy(end() - 1); // what...
 		_size -= 1;
 	}
+// swap 
+	void	swap(vector& other) {
+		if (this == &other) return;
+		vector t = *this;
+		*this = other;
+		other = t;
+	}
 // accessors 
 	reference	front() const { return *_mem; }
-	reference	back() const { return *(_mem + _size - empty()); }
+	reference	back() const { return *(_mem + _size - 1); }
 	size_type	size() const { return _size; }
 	bool		empty() const { return _size == 0; }
 	size_type	capacity() const { return _capacity; }
-	size_type	max_size() const { return std::numeric_limits<size_type>::max(); }
+	size_type	max_size() const {
+		static size_type max =
+			(static_cast<unsigned long long>(~0) >> 1) /
+			sizeof(value_type);
+		return max;
+	}
 	allocator_type	get_allocator() const { return _alloc; }
-
 }; // ! class vector
+
+// swap 
+template <typename T, class Alloc>
+void	swap(vector<T, Alloc>&a, vector<T, Alloc>& b) {
+	a.swap(b);
+}
+
+// vector comparison 
+template <typename T, class Alloc>
+bool operator == (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	if (a.size() != b.size()) return false;
+	return std::equal(a.begin(), a.end(), b.begin());
+}
+template <typename T, class Alloc>
+bool operator != (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	return !(a == b);
+}
+template <typename T, class Alloc>
+bool operator < (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	return std::lexicographical_compare(a.begin(), a.end(),
+					    b.begin(), b.end());
+}
+template <typename T, class Alloc>
+bool operator > (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	return b < a;
+}
+template <typename T, class Alloc>
+bool operator <= (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	return !(b < a);
+}
+template <typename T, class Alloc>
+bool operator >= (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
+	return !(a < b);
+}
 
 } // ! namespace ft

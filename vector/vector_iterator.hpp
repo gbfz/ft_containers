@@ -88,8 +88,9 @@ public:
 	typedef typename traits::iterator_category	iterator_category;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
-	typedef const typename traits::pointer		const_pointer;
-	typedef const typename traits::reference	const_reference;
+	typedef const pointer				const_pointer;
+	typedef typename traits::reference		reference;
+	typedef const reference				const_reference;
 	typedef typename traits::difference_type	difference_type;
 protected:
 // pointer 
