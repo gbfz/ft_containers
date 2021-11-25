@@ -145,17 +145,15 @@ void	compare_all_properties
 		   compare_cap(a, b, true)   &
 		   compare_empty(a, b, true) &
 		   compare_size(a, b, true)  &
-		   compare_front(a, b, true) & 
+		   compare_front(a, b, true) &
 		   compare_back(a, b, true)  &
 		   compare_iterators(a, b, true);
 	print(a, a_stream); print(b, b_stream);
 	all_good &= a_stream.str() == b_stream.str();
-	cout << "!v\n";
-	cout << compare_cap(a, b);
-	cout << "\n!^\n";
 	cout << (all_good ? "all is good!" : "something went wrong") << '\n';
 }
 
+/*
 // test max size 
 void	test_max_size() { 
 	std::vector<int> std_i;
@@ -174,9 +172,11 @@ void	test_max_size() {
 	ft::vector<ft::vector<std::random_access_iterator_tag> > ft_v_i;
 	compare_max(std_v_i, ft_v_i);
 }
+*/
 
 // constructors 
 void	test_constructors() {
+	/*
 	// default
 	{
 		std::vector<string> a;
@@ -185,19 +185,30 @@ void	test_constructors() {
 		a.push_back("zdraste");
 		b.push_back("zdraste");
 		compare_all_properties(a, b);
-		/*
-		a.resize(12, "aboba");
-		b.resize(12, "aboba");
-		compare_all_properties(a, b);
-		a.insert(a.begin(), "bernard");
-		b.insert(b.begin(), "bernard");
-		compare_all_properties(a, b);
-		print(a), print(b);
-		a.erase(a.begin() + 3, a.end());
-		b.erase(b.begin() + 3, b.end());
-		print(a), print(b);
-		compare_all_properties(a, b);
-		*/
+	}
+	*/
+	// copy
+	{
+		 ft::vector<string> a;
+		std::vector<string> sa;
+		compare_all_properties(sa, a);
+		a.insert(a.begin(), "nihuya sebe");
+		sa.insert(sa.begin(), "nihuya sebe");
+		compare_all_properties(sa, a);
+		a.insert(a.begin() + 1, 8, "wow!!");
+		sa.insert(sa.begin() + 1, 8, "wow!!");
+		compare_all_properties(sa, a);
+		 ft::vector<string> b(a);
+		std::vector<string> sb(sa);
+		compare_all_properties(sb, b);
+		b.push_back("ehhh");
+		sb.push_back("ehhh");
+		b.push_back("ehhh");
+		sb.push_back("ehhh");
+		compare_all_properties(sb, b);
+		b.pop_back();
+		sb.pop_back();
+		compare_all_properties(sb, b);
 	}
 }
 

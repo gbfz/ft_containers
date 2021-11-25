@@ -56,10 +56,6 @@ protected:
 		for (iterator it(first); it < last; ++it)
 			destroy(it);
 	}
-// make capacity x2
-	void	double_capacity() {
-		reserve((_capacity | !_capacity) << !!_capacity);
-	}
 public:
 // constructors, destructor 
 	vector(): // {
@@ -70,6 +66,7 @@ public:
 		_alloc(other.get_allocator()),
 		_size(other._size), _capacity(other._capacity) {
 		_mem = _alloc.allocate(_capacity);
+		construct(begin(), end(), value_type());
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc): // {
@@ -186,20 +183,20 @@ public:
 			throw std::out_of_range("Invalid pos in insert().1");
 		difference_type offset = std::distance(begin(), pos);
 		if (_size == _capacity)
-			double_capacity();
+			reserve(_size + 1);
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + 1);
-		*pos = value;
+		construct(pos, value);
 		_size += 1;
 		return pos;
 	}
 	void	insert(iterator pos, size_type count, const_reference value) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().2");
-		if (count == 0) return pos;
+		if (count == 0) return;
 		difference_type offset = std::distance(begin(), pos);
-		if (_size + count >= _capacity)
-			double_capacity();
+		if (_size + count > _capacity)
+			reserve(_size + count);
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
 		construct(pos, pos + count, value);
@@ -212,8 +209,8 @@ public:
 		if (first == last) return;
 		size_type count = std::distance(first, last);
 		difference_type offset = std::distance(begin(), pos);
-		if (_size + count >= _capacity)
-			double_capacity();
+		if (_size + count > _capacity)
+			reserve(_size + count);
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
 		if (first < last)
@@ -242,7 +239,7 @@ public:
 // push_back 
 	void push_back(const_reference value) {
 		if (_size == _capacity)
-			double_capacity();
+			reserve((_capacity | !_capacity) << !!_capacity);
 		*(_mem + _size) = value;
 		_size += 1;
 	}
