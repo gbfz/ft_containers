@@ -43,8 +43,7 @@ protected:
 	void	construct(const iterator& it, const_reference value) {
 		_alloc.construct(&(*it), value);
 	}
-	void	construct(const iterator& first,
-			  const iterator& last,
+	void	construct(const iterator& first, const iterator& last,
 			  const_reference value) {
 		for (iterator it(first); it < last; ++it)
 			construct(it, value);
@@ -59,16 +58,13 @@ protected:
 	}
 // make capacity x2
 	void	double_capacity() {
-		reserve((_capacity | !_capacity) * 2);
+		reserve((_capacity | !_capacity) << !!_capacity);
 	}
 public:
 // constructors, destructor 
 	vector(): // {
 		_alloc(allocator_type()), _size(0), _capacity(0) {
-		/*
-		_mem = _alloc.allocate(_capacity);
-		_alloc.construct(_mem, value_type());
-		*/
+		_mem = 0;
 	}
 	vector(const vector& other): // {
 		_alloc(other.get_allocator()),
@@ -78,7 +74,7 @@ public:
 	}
 	explicit vector(const Alloc& alloc): // {
 		_alloc(alloc), _size(0), _capacity(0) {
-		//_mem = _alloc.allocate(_capacity);
+		_mem = 0;
 	}
 	explicit vector(size_type count,
 			const_reference value = value_type(),
@@ -229,8 +225,6 @@ public:
 	iterator erase(iterator pos) {
 		if (pos < begin() || pos >= end())
 			throw std::out_of_range("Invalid iterator in erase.1");
-		if (size() == 0)
-			throw std::length_error("Erasing element of empty vector");
 		destroy(pos);
 		std::copy(pos + 1, end(), pos);
 		_size -= 1;
@@ -240,11 +234,10 @@ public:
 		if (first < begin() || last > end())
 			throw std::out_of_range("Invalid iterators in erase.2");
 		if (first == last) return last;
-		iterator pos = last == end() ? end() : last + 1;
 		destroy(first, last);
 		std::copy(last, end(), first);
 		_size -= std::distance(first, last);
-		return pos;
+		return last + (last < end());
 	}
 // push_back 
 	void push_back(const_reference value) {
@@ -268,9 +261,9 @@ public:
 	}
 // accessors 
 	reference	front() const { return *_mem; }
-	reference	back() const { return *(_mem + _size - 1); }
+	reference	back() const { return *(end() - !empty()); }
 	size_type	size() const { return _size; }
-	bool		empty() const { return _size == 0; }
+	bool		empty() const { return begin() == end(); }
 	size_type	capacity() const { return _capacity; }
 	size_type	max_size() const {
 		static size_type max =

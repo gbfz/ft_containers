@@ -1,26 +1,25 @@
 #include "vector.hpp"
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using namespace std;
 
 // print 
 template <typename T>
-void	print(const std::vector<T>& v) {
-	cout << "std: ";
+void	print(const std::vector<T>& v, std::ostream& stream = std::cout) {
+	stream << "std: ";
 	for (typename std::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
-		cout << *it << ' ';
-	cout << '\n';
-	cout << "size: " << v.size() << " cap: " << v.capacity() << "\n\n";
+		stream << *it << ' ';
+	stream << '\n';
 }
 
 template <typename T>
-void	print(const ft::vector<T>& v) {
-	cout << "ft: ";
+void	print(const ft::vector<T>& v, std::ostream& stream = std::cout) {
+	stream << "std: ";
 	for (typename ft::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
-		cout << *it << ' ';
-	cout << '\n';
-	cout << "size: " << v.size() << " cap: " << v.capacity() << "\n\n";
+		stream << *it << ' ';
+	stream << '\n';
 }
 
 // test comparison 
@@ -48,9 +47,9 @@ string	test_comparison_with_self(const vector& v) {
 	return "WHAT";
 }
 
-// test member fields  
+// test properties 
 template <typename T>
-bool	test_parameter(const T& a, const T& b, bool silent = false) {
+bool	test_property(const T& a, const T& b, bool silent = false) {
 	if (a == b) {
 		!silent && cout << "good\n";
 		return true;
@@ -66,21 +65,21 @@ template <typename T>
 bool	compare_max
 (const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "max: ";
-	return test_parameter(a.max_size(), b.max_size(), silent);
+	return test_property(a.max_size(), b.max_size(), silent);
 }
 // compare size 
 template <typename T>
 bool	compare_size
 (const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
 	!silent && cout << "size: ";
-	return test_parameter(a.size(), b.size(), silent);
+	return test_property(a.size(), b.size(), silent);
 }
 // compare cap 
 template <typename T>
 bool	compare_cap
 (const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
 	!silent && cout << "capacity: ";
-	return test_parameter(a.capacity(), b.capacity(), silent);
+	return test_property(a.capacity(), b.capacity(), silent);
 }
 // compare front 
 template <typename T>
@@ -95,7 +94,7 @@ bool	compare_front
 		!silent && cout << "front bad\n";
 		return false;
 	}
-	return test_parameter(a.front(), b.front(), silent);
+	return test_property(a.front(), b.front(), silent);
 }
 // compare back 
 template <typename T>
@@ -110,38 +109,51 @@ bool	compare_back
 		!silent && cout << "back bad\n";
 		return false;
 	}
-	return test_parameter(a.back(), b.back(), silent);
+	return test_property(a.back(), b.back(), silent);
 }
 // compare empty 
 template <typename T>
 bool	compare_empty
 (const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
 	!silent && cout << "empty: ";
-	return test_parameter(a.empty(), b.empty(), silent);
-}
-// compare all members 
-template <typename T>
-void	compare_all_members
-(const std::vector<T>& a, const ft::vector<T>&b) {
-	if (   compare_max(a, b, true) && compare_cap(a, b, true)
-	    && compare_empty(a, b, true) && compare_size(a, b, true)
-	    && compare_front(a, b, true) && compare_back(a, b, true))
-		cout << "all is good!\n";
-	else cout << "something went wrong\n";
+	return test_property(a.empty(), b.empty(), silent);
 }
 // compare iterators 
 template <typename T>
-void	compare_iterators
-(const std::vector<T>& a, const ft::vector<T>& b) {
+bool	compare_iterators
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	typename std::vector<T>::difference_type ad;
 	typename  ft::vector<T>::difference_type bd;
 	ad = std::distance(a.begin(), a.end());
 	bd = std::distance(b.begin(), b.end());
-	cout << "iterators: ";
+	!silent && cout << "iterators: ";
 	if (a.end() == a.begin() + ad &&
-	    b.end() == b.begin() + bd)
-		cout << "good\n";
-	else cout << "bad\n";
+	    b.end() == b.begin() + bd) {
+		!silent && cout << "good\n";
+		return true;
+	}
+	!silent && cout << "bad\n";
+	return false;
+}
+// compare all members 
+template <typename T>
+void	compare_all_properties
+(const std::vector<T>& a, const ft::vector<T>&b) {
+	bool all_good;
+	std::stringstream a_stream, b_stream;
+	all_good = compare_max(a, b, true)   &
+		   compare_cap(a, b, true)   &
+		   compare_empty(a, b, true) &
+		   compare_size(a, b, true)  &
+		   compare_front(a, b, true) & 
+		   compare_back(a, b, true)  &
+		   compare_iterators(a, b, true);
+	print(a, a_stream); print(b, b_stream);
+	all_good &= a_stream.str() == b_stream.str();
+	cout << "!v\n";
+	cout << compare_cap(a, b);
+	cout << "\n!^\n";
+	cout << (all_good ? "all is good!" : "something went wrong") << '\n';
 }
 
 // test max size 
@@ -167,18 +179,25 @@ void	test_max_size() {
 void	test_constructors() {
 	// default
 	{
-		std::vector<string> a(1);
-		 ft::vector<string> b(1);
-		compare_iterators(a, b);
-		compare_all_members(a, b);
-		a.resize(32, "aboba");
-		b.resize(32, "aboba");
-		compare_all_members(a, b);
-		compare_iterators(a, b);
+		std::vector<string> a;
+		 ft::vector<string> b;
+		compare_all_properties(a, b);
+		a.push_back("zdraste");
+		b.push_back("zdraste");
+		compare_all_properties(a, b);
+		/*
+		a.resize(12, "aboba");
+		b.resize(12, "aboba");
+		compare_all_properties(a, b);
 		a.insert(a.begin(), "bernard");
 		b.insert(b.begin(), "bernard");
-		compare_all_members(a, b);
-		compare_iterators(a, b);
+		compare_all_properties(a, b);
+		print(a), print(b);
+		a.erase(a.begin() + 3, a.end());
+		b.erase(b.begin() + 3, b.end());
+		print(a), print(b);
+		compare_all_properties(a, b);
+		*/
 	}
 }
 
