@@ -59,8 +59,7 @@ protected:
 public:
 // constructors, destructor 
 	vector(): // {
-		_alloc(allocator_type()), _size(0), _capacity(0) {
-		_mem = 0;
+		_alloc(allocator_type()), _mem(0), _size(0), _capacity(0) {
 	}
 	vector(const vector& other): // {
 		_alloc(other.get_allocator()),
@@ -70,25 +69,25 @@ public:
 		std::copy(other.begin(), other.end(), _mem);
 	}
 	explicit vector(const Alloc& alloc): // {
-		_alloc(alloc), _size(0), _capacity(0) {
-		_mem = 0;
+		_alloc(alloc), _mem(0), _size(0), _capacity(0) {
 	}
 	explicit vector(size_type count,
 			const_reference value = value_type(),
 			const Alloc& alloc = Alloc()): // {
 		_alloc(alloc), _size(count), _capacity(count) {
 		_mem = _alloc.allocate(_capacity);
-		for (pointer p(_mem); p < _mem + _size; ++p) {
-			_alloc.construct(p, value);
-		}
+		construct(_mem, _mem + _size, value);
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
 			const Alloc& alloc = Alloc()): _alloc(alloc) {
-		_mem = _alloc.allocate(std::distance(first, last));
+		// TODO: what if distance is 0?
+		difference_type distance = std::abs(std::distance(first, last));
+		_mem = _alloc.allocate(distance);
+		_size = _capacity = distance;
+		construct(_mem, _mem + _size, value_type());
 		if (first < last) std::copy(first, last, _mem);
 		else std::reverse_copy(first, last, _mem);
-		_size = _capacity = std::distance(first, last);
 	}
 	~vector() {
 		if (_capacity) _alloc.deallocate(_mem, _capacity);
@@ -245,8 +244,8 @@ public:
 	}
 // pop_back 
 	void pop_back() {
-		if (empty()) return; // std::vector does not perform this check. should the ft:: one be better?
-		destroy(end() - 1); // what...
+		if (!empty())
+			destroy(end() - 1); // what...
 		_size -= 1;
 	}
 // swap 

@@ -6,7 +6,7 @@
 namespace ft {
 
 // iterator 
-template <typename _iterator> // could be a pointer or an iterator of different type or whatever 
+template <typename _iterator>
 class vector_iterator {
 // type name shortcut 
 typedef vector_iterator	iterator;

@@ -6,18 +6,10 @@
 using namespace std;
 
 // print 
-template <typename T>
-void	print(const std::vector<T>& v, std::ostream& stream = std::cout) {
-	stream << "std: ";
-	for (typename std::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
-		stream << *it << ' ';
-	stream << '\n';
-}
-
-template <typename T>
-void	print(const ft::vector<T>& v, std::ostream& stream = std::cout) {
-	stream << "std: ";
-	for (typename ft::vector<T>::const_iterator it = v.begin(); it < v.end(); ++it)
+template <typename vector>
+void	print(const vector& v, std::ostream& stream = std::cout) {
+	for (typename vector::const_iterator it = v.begin();
+	     it < v.end(); ++it)
 		stream << *it << ' ';
 	stream << '\n';
 }
@@ -29,15 +21,14 @@ string	test_comparison(const ft::vector<T>& a,
 			const std::vector<T>& sa,
 			const std::vector<T>& sb) {
 	if ((a == b) == (sa == sb) &&
-		(a != b) == (sa != sb) &&
-		 (a < b) == (sa < sb)  &&
-		 (a > b) == (sa > sb)  &&
-		(a <= b) == (sa <= sb) &&
-		(a >= b) == (sa >= sb)
-	   ) return "they're equal!";
+	    (a != b) == (sa != sb) &&
+	    (a <  b) == (sa <  sb) &&
+	    (a >  b) == (sa >  sb) &&
+	    (a <= b) == (sa <= sb) &&
+	    (a >= b) == (sa >= sb))
+		return "they're equal!";
 	return "something went wrong:(";
 }
-
 // test comparison on self 
 template <typename vector>
 string	test_comparison_with_self(const vector& v) {
@@ -118,23 +109,6 @@ bool	compare_empty
 	!silent && cout << "empty: ";
 	return test_property(a.empty(), b.empty(), silent);
 }
-// compare iterators 
-template <typename T>
-bool	compare_iterators
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	typename std::vector<T>::difference_type ad;
-	typename  ft::vector<T>::difference_type bd;
-	ad = std::distance(a.begin(), a.end());
-	bd = std::distance(b.begin(), b.end());
-	!silent && cout << "iterators: ";
-	if (a.end() == a.begin() + ad &&
-	    b.end() == b.begin() + bd) {
-		!silent && cout << "good\n";
-		return true;
-	}
-	!silent && cout << "bad\n";
-	return false;
-}
 // compare all members 
 template <typename T>
 void	compare_all_properties
@@ -146,38 +120,16 @@ void	compare_all_properties
 		   compare_empty(a, b, true) &
 		   compare_size(a, b, true)  &
 		   compare_front(a, b, true) &
-		   compare_back(a, b, true)  &
-		   compare_iterators(a, b, true);
+		   compare_back(a, b, true);
 	print(a, a_stream); print(b, b_stream);
 	all_good &= a_stream.str() == b_stream.str();
 	cout << (all_good ? "all is good!" : "something went wrong") << '\n';
 }
 
-/*
-// test max size 
-void	test_max_size() { 
-	std::vector<int> std_i;
-	ft::vector<int> ft_i;
-	compare_max(std_i, ft_i);
-	std::vector<short> std_sh;
-	ft::vector<short> ft_sh;
-	compare_max(std_sh, ft_sh);
-	std::vector<char> std_ch;
-	ft::vector<char> ft_ch;
-	compare_max(std_ch, ft_ch);
-	std::vector<string> std_s;
-	ft::vector<string> ft_s;
-	compare_max(std_s, ft_s);
-	std::vector<ft::vector<std::random_access_iterator_tag> > std_v_i;
-	ft::vector<ft::vector<std::random_access_iterator_tag> > ft_v_i;
-	compare_max(std_v_i, ft_v_i);
-}
-*/
-
 // constructors 
 void	test_constructors() {
-	/*
-	// default
+	// default 
+	cout << "default:\n";
 	{
 		std::vector<string> a;
 		 ft::vector<string> b;
@@ -186,8 +138,8 @@ void	test_constructors() {
 		b.push_back("zdraste");
 		compare_all_properties(a, b);
 	}
-	*/
-	// copy
+	// copy 
+	cout << "\ncopy:\n";
 	{
 		 ft::vector<string> a;
 		std::vector<string> sa;
@@ -210,8 +162,65 @@ void	test_constructors() {
 		sb.pop_back();
 		compare_all_properties(sb, b);
 	}
+	// with explicit allocator 
+	cout << "\nexplicit(alloc):\n";
+	{
+		std::allocator<int> alloc;
+		std::vector<char> a(alloc);
+		 ft::vector<char> b(alloc);
+		compare_all_properties(a, b);
+		a.push_back('o');
+		b.push_back('o');
+		compare_all_properties(a, b);
+		a.pop_back();
+		b.pop_back();
+		compare_all_properties(a, b);
+	}
+	// with count, value_type && alloc 
+	cout << "\nwith count && value && alloc:\n";
+	{
+		size_t	count		= 15;
+		string	value		= "жесть";
+		std::allocator<string>	alloc;
+		std::vector<string>	a(count, value, alloc);
+		 ft::vector<string>	b(count, value, alloc);
+		compare_all_properties(a, b);
+		a.erase(a.begin(), a.end());
+		b.erase(b.begin(), b.end());
+		compare_all_properties(a, b);
+	}
+	// range constructor 
+	cout << "\nwith range:\n";
+	{
+		std::vector<string> sa;
+		 ft::vector<string> a;
+		sa.insert(sa.begin(), 9, "420");
+		a.insert(a.begin(), 9, "420");
+		compare_all_properties(sa, a);
+		std::vector<string> sb(sa.begin() + 2, sa.end() - 2);
+		 ft::vector<string> b(a.begin() + 2, a.end() - 2);
+		compare_all_properties(sb, b);
+	}
+}
+
+// swap 
+void	test_swap() {
+	std::vector<int> sa, sb;
+	 ft::vector<int> a, b;
+	sa.insert(sa.begin(), 9, 420);
+	sb.push_back(34);
+	a.insert(a.begin(), 9, 420);
+	b.push_back(34);
+	compare_all_properties(sa, a);
+	compare_all_properties(sb, b);
+	swap(a, b);
+	compare_all_properties(sa, a);
+	compare_all_properties(sb, b);
+	b.swap(a);
+	compare_all_properties(sa, a);
+	compare_all_properties(sb, b);
 }
 
 int main() {
-	test_constructors();
+	test_swap();
 }
