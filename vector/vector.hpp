@@ -3,8 +3,6 @@
 #include "ft_type_traits.hpp"
 #include "vector_iterator.hpp"
 
-#include <iostream> // :))
-
 namespace ft {
 
 template <typename T, class Alloc = std::allocator<T> >
@@ -109,23 +107,32 @@ public:
 		return *this;
 	}
 // assign 
-	void	assign(size_type count,	const_reference value) {
+private:
+// one value 
+	void	_assign(size_type count, const_reference value, fill_type) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		resize(count);
 		construct(begin(), end(), value);
 	}
+// range 
 	template <class InputIt>
-	void	assign(InputIt first, InputIt last) {
-		difference_type dist = std::distance(first, last);
+	void	_assign(InputIt first, InputIt last, range_type) {
+		size_type dist = std::abs(std::distance(first, last));
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		pointer new_mem = _alloc.allocate(dist);
 		if (first < last)
 			std::copy(first, last, new_mem);
-		else if (first > last)
-			std::reverse_copy(last, first, new_mem);
-		update_mem(new_mem, dist, dist);
+		else std::reverse_copy(last, first, new_mem);
+		update_mem(new_mem, std::max(_capacity, dist), dist);
+	}
+public:
+// dispatch disambiguation 
+	template <typename First, typename Second>
+	void	assign(First first, Second second) {
+		typedef typename is_size_type<First>::type assign_type;
+		_assign(first, second, assign_type());
 	}
 // reserve 
 	void	reserve(size_type new_cap) {
@@ -165,12 +172,12 @@ public:
 		return _mem[pos];
 	}
 	reference at(size_type pos) {
-		if (pos < 0 || pos >= size())
+		if (pos >= size())
 			throw std::out_of_range("Invalid pos in at()");
 		return _mem[pos];
 	}
 	const_reference at(size_type pos) const {
-		if (pos < 0 || pos >= size())
+		if (pos >= size())
 			throw std::out_of_range("Invalid pos in at()");
 		return _mem[pos];
 	}
@@ -186,6 +193,7 @@ public:
 // rend
 	//rev_iterator rend() const { return rev_iterator(_mem - 1); }
 // insert 
+// one value 
 	iterator insert(iterator pos, const_reference value) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid pos in insert().1");
@@ -199,10 +207,11 @@ public:
 		return pos;
 	}
 private:
+// count values 
 	void	_insert(iterator pos, size_type count, const_reference value,
 			fill_type) {
 		if (pos < begin() || pos > end())
-			throw std::out_of_range("Invalid iterator(s) in insert().2");
+			throw std::out_of_range("Invalid iterator in insert().2");
 		if (count == 0) return;
 		difference_type offset = std::distance(begin(), pos);
 		if (_size + count > _capacity)
@@ -212,11 +221,12 @@ private:
 		construct(pos, pos + count, value);
 		_size += count;
 	}
+// range 
 	template <class InputIt>
 	void	_insert(iterator pos, InputIt first, InputIt last,
 			range_type) {
 		if (pos < begin() || pos > end())
-			throw std::out_of_range("Invalid iterator(s) in insert().3");
+			throw std::out_of_range("Invalid iterator in insert().3");
 		if (first == last) return;
 		size_type count = std::distance(first, last);
 		difference_type offset = std::distance(begin(), pos);
@@ -230,6 +240,7 @@ private:
 		_size += count;
 	}
 public:
+// dispatch disambiguation 
 	template <typename First, typename Second>
 	void	insert(iterator pos, First first, Second second) {
 		typedef typename is_size_type<First>::type insert_type;

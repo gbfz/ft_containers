@@ -61,21 +61,21 @@ bool	compare_max
 // compare size 
 template <typename T>
 bool	compare_size
-(const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "size: ";
 	return test_property(a.size(), b.size(), silent);
 }
 // compare cap 
 template <typename T>
 bool	compare_cap
-(const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "capacity: ";
 	return test_property(a.capacity(), b.capacity(), silent);
 }
 // compare front 
 template <typename T>
 bool	compare_front
-(const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "front: ";
 	if (a.empty() & b.empty()) {
 		!silent && cout << "good\n";
@@ -90,7 +90,7 @@ bool	compare_front
 // compare back 
 template <typename T>
 bool	compare_back
-(const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "back: ";
 	if (a.empty() & b.empty()) {
 		!silent && cout << "good\n";
@@ -105,9 +105,27 @@ bool	compare_back
 // compare empty 
 template <typename T>
 bool	compare_empty
-(const std::vector<T>& a, const ft::vector<T>&b, bool silent = false) {
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
 	!silent && cout << "empty: ";
 	return test_property(a.empty(), b.empty(), silent);
+}
+// compare at, [] 
+template <typename T>
+bool	compare_at_and_index
+(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
+	!silent && cout << "at, []: ";
+	if (a.size() != b.size()) {
+		cout << "Cannot compare differently sized vectors\n";
+		return false;
+	}
+	bool all_good = true;
+	for (size_t i = 0; i < a.size(); ++i) {
+		all_good &= a.at(i) == b.at(i);
+		all_good &= a[i] == b[i];
+	}
+	if (all_good) !silent && cout << "good\n";
+	else !silent && cout << "bad\n";
+	return all_good;
 }
 // compare all members 
 template <typename T>
@@ -120,7 +138,8 @@ void	compare_all_properties
 		   compare_empty(a, b, true) &
 		   compare_size(a, b, true)  &
 		   compare_front(a, b, true) &
-		   compare_back(a, b, true);
+		   compare_back(a, b, true)  &
+		   compare_at_and_index(a, b, true);
 	print(a, a_stream); print(b, b_stream);
 	all_good &= a_stream.str() == b_stream.str();
 	cout << (all_good ? "all is good!" : "something went wrong") << '\n';
@@ -128,6 +147,7 @@ void	compare_all_properties
 
 // constructors 
 void	test_constructors() {
+	cout << "\nTESTING CONSTRUCTORS && DESTRUCTOR\n";
 	// default 
 	cout << "default:\n";
 	{
@@ -205,6 +225,7 @@ void	test_constructors() {
 
 // swap 
 void	test_swap() {
+	cout << "\nTESTING SWAP\n";
 	std::vector<int> sa, sb;
 	 ft::vector<int> a, b;
 	sa.insert(sa.begin(), 9, 420);
@@ -214,13 +235,92 @@ void	test_swap() {
 	compare_all_properties(sa, a);
 	compare_all_properties(sb, b);
 	swap(a, b);
-	compare_all_properties(sa, a);
-	compare_all_properties(sb, b);
-	b.swap(a);
+	compare_all_properties(sa, b);
+	compare_all_properties(sb, a);
+	sb.swap(sa);
 	compare_all_properties(sa, a);
 	compare_all_properties(sb, b);
 }
 
+// test assign 
+void	test_assign() {
+	cout << "\nTESTING ASSIGN\n";
+	// char 
+	{
+		 ft::vector<char> a;
+		std::vector<char> b;
+		a.assign(5, 'a');
+		b.assign(5, 'a');
+		compare_all_properties(b, a);
+		string extra(6, 'b');
+		a.assign(extra.begin(), extra.end());
+		b.assign(extra.begin(), extra.end());
+		compare_all_properties(b, a);
+	}
+	// integer
+	{
+		 ft::vector<size_t> a;
+		std::vector<size_t> b;
+		a.assign(13, 2147483647);
+		b.assign(13, 2147483647);
+		compare_all_properties(b, a);
+		size_t	arr[5] = {1, 2, 3, 4, 5};
+		a.assign(arr, arr + 5);
+		b.assign(arr, arr + 5);
+		compare_all_properties(b, a);
+	}
+}
+
+// clear 
+void	test_clear() {
+	cout << "\nTESTING CLEAR\n";
+	 ft::vector<long> a;
+	std::vector<long> b;
+	a.insert(a.begin(), 15, 55620);
+	b.insert(b.begin(), 15, 55620);
+	compare_all_properties(b, a);
+	a.clear();
+	b.clear();
+	compare_all_properties(b, a);
+	a.push_back(39);
+	b.push_back(39);
+	compare_all_properties(b, a);
+}
+
+// test at, [] 
+void	test_at_and_index() {
+	 ft::vector<string> a;
+	std::vector<string> b;
+	a.assign(14, "damn");
+	b.assign(14, "damn");
+	bool all_good = compare_at_and_index(b, a, true);
+	try {
+		a.at(512) = "what";
+	} catch (...) {
+		all_good &= 1;
+	}
+	try {
+		b.at(512) = "what";
+	} catch (...) {
+		all_good &= 1;
+	}
+	if (all_good)
+		cout << "all is good!\n";
+	else cout << "at bad\n";
+}
+
+// TODO: solve swap @ 302 requesting non-const operator=
+// 	 design reverse iterators
 int main() {
-	test_swap();
+	//test_constructors();
+	//test_swap();
+	//test_assign();
+	//test_clear();
+	//test_at_and_index();
+	ft::vector<int>::iterator a;
+	ft::vector<char>::iterator b;
+	//cout << (a < b) << '\n';
+	std::vector<int>::iterator sa;
+	std::vector<char>::iterator sb;
+	cout << (sa < sb) << '\n';
 }

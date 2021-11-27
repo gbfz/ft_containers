@@ -1,8 +1,23 @@
 #pragma  once
 #include <stddef.h>
-#include </usr/include/c++/11.1.0/bits/stl_iterator_base_types.h> // TODO: gotta find a better way. just <iterator>?
+#include <bits/stl_iterator_base_types.h>
 
 namespace ft {
+
+template <
+	  typename _Category,
+	  typename _Type,
+	  typename _Distance = ptrdiff_t,
+	  typename _Pointer = _Type*,
+	  typename _Reference = _Type&
+	 >
+struct iterator {
+	typedef _Category	iterator_category;
+	typedef _Type		value_type;
+	typedef _Distance	difference_type;
+	typedef _Pointer	pointer;
+	typedef _Reference	reference;
+};
 
 template <typename iterator>
 struct iterator_traits;

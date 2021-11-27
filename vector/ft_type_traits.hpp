@@ -1,12 +1,25 @@
 #pragma  once
 #include <cstddef>
 
-struct range_type {};
+namespace ft{
+
+struct false_type {};
+struct true_type {};
+
+template <typename, typename>
+struct are_same_type {
+	typedef false_type type;
+};
+template <typename T>
+struct are_same_type<T, T> {
+	typedef true_type type;
+};
+
 struct fill_type {};
 
 template <typename T>
 struct is_size_type {
-	typedef range_type type;
+	typedef false_type type;
 };
 template <>
 struct is_size_type<unsigned long long> {
@@ -40,3 +53,5 @@ template <>
 struct is_size_type<char> {
 	typedef fill_type type;
 };
+
+} // ! namespace ft
