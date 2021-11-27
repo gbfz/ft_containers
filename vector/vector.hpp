@@ -1,5 +1,6 @@
 #pragma  once
 #include <algorithm>
+#include "ft_type_traits.hpp"
 #include "vector_iterator.hpp"
 
 #include <iostream> // :))
@@ -95,9 +96,17 @@ public:
 // = 
 	vector&	operator = (const vector& other) {
 		if (this == &other) return *this;
+		pointer new_mem = other._alloc.allocate(other.capacity());
+		std::copy(other.begin(), other.end(), new_mem);
+		update_mem(new_mem, other.capacity(), other.size());
+		return *this;
+	}
+	vector&	operator = (vector& other) {
+		if (this == &other) return *this;
 		pointer new_mem = other._alloc.allocate(other._capacity);
 		std::copy(other.begin(), other.end(), new_mem);
-		update_mem(new_mem, _capacity);
+		update_mem(new_mem, other.capacity(), other.size());
+		return *this;
 	}
 // assign 
 	void	assign(size_type count,	const_reference value) {
@@ -189,7 +198,9 @@ public:
 		_size += 1;
 		return pos;
 	}
-	void	insert(iterator pos, size_type count, const_reference value) {
+private:
+	void	_insert(iterator pos, size_type count, const_reference value,
+			fill_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().2");
 		if (count == 0) return;
@@ -202,7 +213,8 @@ public:
 		_size += count;
 	}
 	template <class InputIt>
-	void	insert(iterator pos, InputIt first, InputIt last) {
+	void	_insert(iterator pos, InputIt first, InputIt last,
+			range_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator(s) in insert().3");
 		if (first == last) return;
@@ -216,6 +228,12 @@ public:
 			std::copy(first, last, pos);
 		else std::reverse_copy(first, last, pos);
 		_size += count;
+	}
+public:
+	template <typename First, typename Second>
+	void	insert(iterator pos, First first, Second second) {
+		typedef typename is_size_type<First>::type insert_type;
+		_insert(pos, first, second, insert_type());
 	}
 // erase 
 	iterator erase(iterator pos) {
