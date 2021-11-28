@@ -1,7 +1,8 @@
 #pragma  once
 #include <algorithm>
-#include "ft_type_traits.hpp"
-#include "vector_iterator.hpp"
+#include <memory>
+#include <stdexcept>
+#include "normal_iterator.hpp"
 
 namespace ft {
 
@@ -12,16 +13,18 @@ public:
 // member types definitions 
 	typedef T			value_type;
 	typedef Alloc			allocator_type;
-	typedef typename Alloc::pointer	pointer;
-	typedef const pointer		const_pointer;
+	typedef typename Alloc::pointer		pointer;
+	typedef typename Alloc::const_pointer	const_pointer;
 	typedef value_type&		reference;
 	typedef const value_type&	const_reference;
 	typedef size_t			size_type;
 	typedef ptrdiff_t		difference_type;
 	typedef std::random_access_iterator_tag		iterator_category;
-	typedef vector_iterator <pointer>		iterator;
+	typedef _normal_iterator<pointer, vector>	iterator;
+	typedef _normal_iterator<const_pointer, vector> const_iterator;
+	//	typedef vector_iterator <pointer>		iterator;
 	//typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
-	typedef vector_const_iterator <pointer>		const_iterator;
+	//	typedef vector_const_iterator <pointer>		const_iterator;
 	//typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
 protected:
 // member fields 
@@ -75,7 +78,8 @@ public:
 			const Alloc& alloc = Alloc()): // {
 		_alloc(alloc), _size(count), _capacity(count) {
 		_mem = _alloc.allocate(_capacity);
-		construct(_mem, _mem + _size, value);
+		construct(iterator(_mem), iterator(_mem + _size),
+			value);
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
@@ -84,7 +88,8 @@ public:
 		difference_type distance = std::abs(std::distance(first, last));
 		_mem = _alloc.allocate(distance);
 		_size = _capacity = distance;
-		construct(_mem, _mem + _size, value_type());
+		construct(iterator(_mem), iterator(_mem + _size),
+				value_type());
 		if (first < last) std::copy(first, last, _mem);
 		else std::reverse_copy(first, last, _mem);
 	}
@@ -109,7 +114,7 @@ public:
 // assign 
 private:
 // one value 
-	void	_assign(size_type count, const_reference value, fill_type) {
+	void	_assign(size_type count, const_reference value, true_type) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		resize(count);
@@ -117,7 +122,7 @@ private:
 	}
 // range 
 	template <class InputIt>
-	void	_assign(InputIt first, InputIt last, range_type) {
+	void	_assign(InputIt first, InputIt last, false_type) {
 		size_type dist = std::abs(std::distance(first, last));
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
@@ -131,7 +136,7 @@ public:
 // dispatch disambiguation 
 	template <typename First, typename Second>
 	void	assign(First first, Second second) {
-		typedef typename is_size_type<First>::type assign_type;
+		typedef typename is_integral<First>::type assign_type;
 		_assign(first, second, assign_type());
 	}
 // reserve 
@@ -140,7 +145,8 @@ public:
 			throw std::length_error("Cannot reserve given amount of memory");
 		if (new_cap <= _capacity) return;
 		pointer new_mem = _alloc.allocate(new_cap);
-		construct(new_mem, new_mem + new_cap, value_type()); // XXX: is this correct?
+		construct(iterator(new_mem), iterator(new_mem + new_cap),
+				value_type()); // XXX: is this correct?
 		std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, new_cap, _size);
 	}
@@ -155,7 +161,8 @@ public:
 			return;
 		}
 		pointer new_mem = _alloc.allocate(count);
-		construct(new_mem, new_mem + count, value);
+		construct(iterator(new_mem), iterator(new_mem + count),
+				value);
 		if (_size) std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, count, count);
 	}
@@ -209,7 +216,7 @@ public:
 private:
 // count values 
 	void	_insert(iterator pos, size_type count, const_reference value,
-			fill_type) {
+			true_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().2");
 		if (count == 0) return;
@@ -224,7 +231,7 @@ private:
 // range 
 	template <class InputIt>
 	void	_insert(iterator pos, InputIt first, InputIt last,
-			range_type) {
+			false_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().3");
 		if (first == last) return;
@@ -243,7 +250,7 @@ public:
 // dispatch disambiguation 
 	template <typename First, typename Second>
 	void	insert(iterator pos, First first, Second second) {
-		typedef typename is_size_type<First>::type insert_type;
+		typedef typename is_integral<First>::type insert_type;
 		_insert(pos, first, second, insert_type());
 	}
 // erase 
@@ -286,7 +293,7 @@ public:
 	}
 // accessors 
 	reference	front() const { return *_mem; }
-	reference	back() const { return *(end() - !empty()); }
+	reference	back() const { return *(_mem + _size - !empty()); }
 	size_type	size() const { return _size; }
 	bool		empty() const { return begin() == end(); }
 	size_type	capacity() const { return _capacity; }

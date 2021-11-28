@@ -4,24 +4,6 @@
 
 namespace ft {
 
-template <
-	  typename _Category,
-	  typename _Type,
-	  typename _Distance = ptrdiff_t,
-	  typename _Pointer = _Type*,
-	  typename _Reference = _Type&
-	 >
-struct iterator {
-	typedef _Category	iterator_category;
-	typedef _Type		value_type;
-	typedef _Distance	difference_type;
-	typedef _Pointer	pointer;
-	typedef _Reference	reference;
-};
-
-template <typename iterator>
-struct iterator_traits;
-
 template <typename iterator>
 struct iterator_traits {
 	typedef typename iterator::iterator_category	iterator_category;

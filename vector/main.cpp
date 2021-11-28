@@ -130,7 +130,7 @@ bool	compare_at_and_index
 // compare all members 
 template <typename T>
 void	compare_all_properties
-(const std::vector<T>& a, const ft::vector<T>&b) {
+(const std::vector<T>& a, const ft::vector<T>& b) {
 	bool all_good;
 	std::stringstream a_stream, b_stream;
 	all_good = compare_max(a, b, true)   &
@@ -312,15 +312,13 @@ void	test_at_and_index() {
 // TODO: solve swap @ 302 requesting non-const operator=
 // 	 design reverse iterators
 int main() {
-	//test_constructors();
-	//test_swap();
-	//test_assign();
-	//test_clear();
-	//test_at_and_index();
-	ft::vector<int>::iterator a;
-	ft::vector<char>::iterator b;
-	//cout << (a < b) << '\n';
-	std::vector<int>::iterator sa;
-	std::vector<char>::iterator sb;
-	cout << (sa < sb) << '\n';
+	test_constructors();
+	test_swap();
+	test_assign();
+	test_clear();
+	test_at_and_index();
+	ft::vector<int>::iterator it;
+	ft::vector<int>::const_iterator cit(it);
+	std::vector<int>::iterator sit;
+	std::vector<int>::const_iterator scit(sit);
 }
