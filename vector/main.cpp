@@ -229,8 +229,8 @@ void	test_swap() {
 	std::vector<int> sa, sb;
 	 ft::vector<int> a, b;
 	sa.insert(sa.begin(), 9, 420);
-	sb.push_back(34);
 	a.insert(a.begin(), 9, 420);
+	sb.push_back(34);
 	b.push_back(34);
 	compare_all_properties(sa, a);
 	compare_all_properties(sb, b);
@@ -309,16 +309,36 @@ void	test_at_and_index() {
 	else cout << "at bad\n";
 }
 
-// TODO: solve swap @ 302 requesting non-const operator=
-// 	 design reverse iterators
+// test reverse iterator 
+template <class vector>
+bool	compare_iterators(const vector& v) {
+	return *(v.begin() + v.size()) == *(v.rend() - v.size() - 1);
+}
+template <class typeL, class typeR>
+bool	compare_two(const typeL& v1, const typeR& v2) {
+	if (v1.size() != v2.size()) {
+		cout << "Cannot compare differently sized containers\n";
+		return false;
+	}
+	return compare_iterators(v1) == compare_iterators(v2);
+}
+void	test_reverse_iterator() {
+	ft::vector<int> a;
+	std::vector<int> b;
+	cout << "empty containers:\n" << '\n';
+	compare_two(a, b);
+	a.push_back(15);
+	b.push_back(15);
+	cout << "one element:\n" << '\n';
+	compare_two(a, b);
+}
+
+// TODO: design reverse iterators
 int main() {
-	test_constructors();
-	test_swap();
-	test_assign();
-	test_clear();
-	test_at_and_index();
-	ft::vector<int>::iterator it;
-	ft::vector<int>::const_iterator cit(it);
-	std::vector<int>::iterator sit;
-	std::vector<int>::const_iterator scit(sit);
+	//test_constructors();
+	//test_swap();
+	//test_assign();
+	//test_clear();
+	//test_at_and_index();
+	test_reverse_iterator();
 }

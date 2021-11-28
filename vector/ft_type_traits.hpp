@@ -6,6 +6,7 @@ namespace ft {
 struct false_type {};
 struct true_type {};
 
+// enable if 
 template <bool, typename>
 struct enable_if {};
 
@@ -14,6 +15,7 @@ struct enable_if<true, T> {
 	typedef T type;
 };
 
+// are_same_type 
 template <typename, typename>
 struct are_same_type {
 	enum { value = false };
@@ -25,40 +27,60 @@ struct are_same_type<T, T> {
 	typedef true_type type;
 };
 
-template <typename T>
+// is_integral 
+template <typename>
 struct is_integral {
+	enum { value = false };
 	typedef false_type type;
 };
 template <>
-struct is_integral<unsigned long long> {
+struct is_integral<char> {
+	enum { value = true };
 	typedef true_type type;
 };
 template <>
-struct is_integral<long long> {
-	typedef true_type type;
-};
-template <>
-struct is_integral<size_t> {
-	typedef true_type type;
-};
-template <>
-struct is_integral<long> {
-	typedef true_type type;
-};
-template <>
-struct is_integral<unsigned int> {
-	typedef true_type type;
-};
-template <>
-struct is_integral<int> {
+struct is_integral<unsigned char> {
+	enum { value = true };
 	typedef true_type type;
 };
 template <>
 struct is_integral<short> {
+	enum { value = true };
 	typedef true_type type;
 };
 template <>
-struct is_integral<char> {
+struct is_integral<unsigned short> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<int> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<unsigned int> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<long> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<unsigned long> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<long long> {
+	enum { value = true };
+	typedef true_type type;
+};
+template <>
+struct is_integral<unsigned long long> {
+	enum { value = true };
 	typedef true_type type;
 };
 

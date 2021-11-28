@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 #include "normal_iterator.hpp"
+#include "reverse_iterator.hpp"
 
 namespace ft {
 
@@ -11,27 +12,26 @@ class vector {
 
 public:
 // member types definitions 
-	typedef T			value_type;
-	typedef Alloc			allocator_type;
-	typedef typename Alloc::pointer		pointer;
-	typedef typename Alloc::const_pointer	const_pointer;
-	typedef value_type&		reference;
-	typedef const value_type&	const_reference;
-	typedef size_t			size_type;
-	typedef ptrdiff_t		difference_type;
-	typedef std::random_access_iterator_tag		iterator_category;
-	typedef _normal_iterator<pointer, vector>	iterator;
-	typedef _normal_iterator<const_pointer, vector> const_iterator;
-	//	typedef vector_iterator <pointer>		iterator;
-	//typedef vector_reverse_iterator < ft::vector<T> >	rev_iterator;
-	//	typedef vector_const_iterator <pointer>		const_iterator;
-	//typedef vector_const_reverse_iterator < ft::vector<T> > const_rev_iterator;
+	typedef T					value_type;
+	typedef Alloc					allocator_type;
+	typedef typename Alloc::pointer			pointer;
+	typedef typename Alloc::const_pointer		const_pointer;
+	typedef value_type&				reference;
+	typedef const value_type&			const_reference;
+	typedef size_t					size_type;
+	typedef ptrdiff_t				difference_type;
+	typedef ft::normal_iterator<pointer, vector>		iterator;
+	typedef ft::reverse_iterator<iterator>			reverse_iterator;
+	typedef ft::normal_iterator<const_pointer, vector> 	const_iterator;
+	typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
 protected:
 // member fields 
 	allocator_type	_alloc;
 	pointer		_mem;
 	size_type	_size;
 	size_type	_capacity;
+	typedef true_type	fill_type;
+	typedef false_type	range_type;
 // memory methods 
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
@@ -99,14 +99,7 @@ public:
 // = 
 	vector&	operator = (const vector& other) {
 		if (this == &other) return *this;
-		pointer new_mem = other._alloc.allocate(other.capacity());
-		std::copy(other.begin(), other.end(), new_mem);
-		update_mem(new_mem, other.capacity(), other.size());
-		return *this;
-	}
-	vector&	operator = (vector& other) {
-		if (this == &other) return *this;
-		pointer new_mem = other._alloc.allocate(other._capacity);
+		pointer new_mem = other.get_allocator().allocate(other.capacity());
 		std::copy(other.begin(), other.end(), new_mem);
 		update_mem(new_mem, other.capacity(), other.size());
 		return *this;
@@ -114,7 +107,7 @@ public:
 // assign 
 private:
 // one value 
-	void	_assign(size_type count, const_reference value, true_type) {
+	void	_assign(size_type count, const_reference value, fill_type) {
 		if (count > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
 		resize(count);
@@ -122,7 +115,7 @@ private:
 	}
 // range 
 	template <class InputIt>
-	void	_assign(InputIt first, InputIt last, false_type) {
+	void	_assign(InputIt first, InputIt last, range_type) {
 		size_type dist = std::abs(std::distance(first, last));
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign() too many values to vector");
@@ -196,9 +189,11 @@ public:
 	iterator end() { return iterator(_mem + _size); }
 	const_iterator end() const { return const_iterator(_mem + _size); }
 // rbegin
-	//rev_iterator rbegin() const { return rev_iterator(_mem + _size - 1); }
+	reverse_iterator rbegin() { return reverse_iterator(_mem + _size - 1); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(_mem + _size - 1); }
 // rend
-	//rev_iterator rend() const { return rev_iterator(_mem - 1); }
+	reverse_iterator rend() { return reverse_iterator(_mem - 1); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(_mem- 1); }
 // insert 
 // one value 
 	iterator insert(iterator pos, const_reference value) {
@@ -216,7 +211,7 @@ public:
 private:
 // count values 
 	void	_insert(iterator pos, size_type count, const_reference value,
-			true_type) {
+			fill_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().2");
 		if (count == 0) return;
@@ -231,7 +226,7 @@ private:
 // range 
 	template <class InputIt>
 	void	_insert(iterator pos, InputIt first, InputIt last,
-			false_type) {
+			range_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().3");
 		if (first == last) return;
