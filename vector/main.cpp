@@ -311,29 +311,54 @@ void	test_at_and_index() {
 
 // test reverse iterator 
 template <class vector>
-bool	compare_iterators(const vector& v) {
-	return *(v.begin() + v.size()) == *(v.rend() - v.size() - 1);
+bool	compare_iterators(const vector& v, size_t offset) {
+	return *(v.begin() + offset) == *(v.rbegin() + offset);
 }
 template <class typeL, class typeR>
-bool	compare_two(const typeL& v1, const typeR& v2) {
+void	compare_two(const typeL& v1, const typeR& v2, size_t offset) {
 	if (v1.size() != v2.size()) {
 		cout << "Cannot compare differently sized containers\n";
-		return false;
+		return;
 	}
-	return compare_iterators(v1) == compare_iterators(v2);
+	if (compare_iterators(v1, offset) == compare_iterators(v2, offset))
+		cout << "good\n";
+	else cout << "bad\n";
 }
 void	test_reverse_iterator() {
 	ft::vector<int> a;
 	std::vector<int> b;
-	cout << "empty containers:\n" << '\n';
-	compare_two(a, b);
 	a.push_back(15);
 	b.push_back(15);
-	cout << "one element:\n" << '\n';
-	compare_two(a, b);
+	cout << "one element:\n";
+	compare_two(a, b, 0);
+	a.push_back(150);
+	b.push_back(150);
+	cout << "two elements:\n";
+	compare_two(a, b, 0);
+	compare_two(a, b, 1);
+	a.insert(a.begin(), 14, 109);
+	b.insert(b.begin(), 14, 109);
+	cout << "many elements:\n";
+	compare_two(a, b, 0);
+	compare_two(a, b, 1);
+	compare_two(a, b, 9);
+	compare_two(a, b, 14);
+	a.erase(a.begin() + 2, a.begin() + 14);
+	b.erase(b.begin() + 2, b.begin() + 14);
+	compare_two(a, b, 0);
+	compare_two(a, b, 1);
+	compare_two(a, b, 3);
+	a.insert(a.begin(), 22);
+	b.insert(b.begin(), 22);
+	print(a); print(b);
+	for (ft::vector<int>::reverse_iterator it = a.rbegin(); it < a.rend(); ++it)
+		cout << *it << ' ';
+	cout << '\n';
+	for (std::vector<int>::reverse_iterator it = b.rbegin(); it < b.rend(); ++it)
+		cout << *it << ' ';
+	cout << '\n';
 }
 
-// TODO: design reverse iterators
 int main() {
 	//test_constructors();
 	//test_swap();

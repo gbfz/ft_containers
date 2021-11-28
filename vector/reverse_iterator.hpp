@@ -23,13 +23,13 @@ public:
 		_base(iterator) {}
 	reverse_iterator(const reverse_iterator& other):
 		_base(other.base()) {}
-	template <typename other_iterator>
-	reverse_iterator(const reverse_iterator<other_iterator>& other):
+	template <typename other_type>
+	reverse_iterator(const reverse_iterator<other_type>& other):
 		_base(other.base()) {}
 // *, ->, [] 
 	reference operator * () const {
 		base_type tmp = _base;
-		return *--_base;
+		return *--tmp;
 	}
 	pointer operator -> () const {
 		base_type tmp = _base;
@@ -115,28 +115,28 @@ inline bool
 operator <
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return rhs.base() < lhs.base();
+	return lhs.base() < rhs.base();
 }
 template<typename type>
 inline bool
 operator >
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return rhs.base() > lhs.base();
+	return lhs.base() > rhs.base();
 }
 template<typename type>
 inline bool
 operator <=
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return rhs.base() <= lhs.base();
+	return lhs.base() <= rhs.base();
 }
 template<typename type>
 inline bool
 operator >=
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return rhs.base() >= rhs.base();
+	return lhs.base() >= rhs.base();
 }
 */
 
@@ -181,7 +181,7 @@ inline bool
 operator >=
 (const reverse_iterator<it>& lhs,
  const reverse_iterator<cit>& rhs) {
-	return rhs.base() >= rhs.base();
+	return rhs.base() >= lhs.base();
 }
 
 } // ! namespace ft

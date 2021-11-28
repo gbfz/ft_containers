@@ -1,7 +1,7 @@
 #pragma  once
-#include <algorithm>
-#include <memory>
-#include <stdexcept>
+#include <memory>	// std::allocator
+#include <stdexcept>	// std::exception
+#include <algorithm>	// std::reverse_copy((
 #include "normal_iterator.hpp"
 #include "reverse_iterator.hpp"
 
@@ -21,9 +21,9 @@ public:
 	typedef size_t					size_type;
 	typedef ptrdiff_t				difference_type;
 	typedef ft::normal_iterator<pointer, vector>		iterator;
-	typedef ft::reverse_iterator<iterator>			reverse_iterator;
 	typedef ft::normal_iterator<const_pointer, vector> 	const_iterator;
 	typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
+	typedef ft::reverse_iterator<iterator>			reverse_iterator;
 protected:
 // member fields 
 	allocator_type	_alloc;
@@ -189,11 +189,11 @@ public:
 	iterator end() { return iterator(_mem + _size); }
 	const_iterator end() const { return const_iterator(_mem + _size); }
 // rbegin
-	reverse_iterator rbegin() { return reverse_iterator(_mem + _size - 1); }
-	const_reverse_iterator rbegin() const { return const_reverse_iterator(_mem + _size - 1); }
+	reverse_iterator rbegin() { return reverse_iterator(end()); }
+	const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
 // rend
-	reverse_iterator rend() { return reverse_iterator(_mem - 1); }
-	const_reverse_iterator rend() const { return const_reverse_iterator(_mem- 1); }
+	reverse_iterator rend() { return reverse_iterator(begin()); }
+	const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 // insert 
 // one value 
 	iterator insert(iterator pos, const_reference value) {
