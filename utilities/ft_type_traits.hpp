@@ -14,17 +14,13 @@ template <typename T>
 struct enable_if<true, T> {
 	typedef T type;
 };
+// enable if same 
+template <typename, typename, typename>
+struct enable_if_same {};
 
-// are_same_type 
-template <typename, typename>
-struct are_same_type {
-	enum { value = false };
-	typedef false_type type;
-};
-template <typename T>
-struct are_same_type<T, T> {
-	enum { value = true };
-	typedef true_type type;
+template <typename T, typename C>
+struct enable_if_same<T, T, C> {
+	typedef C type;
 };
 
 // is_integral 

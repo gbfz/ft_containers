@@ -1,6 +1,12 @@
 #pragma  once
 #include <stddef.h>
-#include <bits/stl_iterator_base_types.h>
+
+#ifndef _STL_ITERATOR_BASE_TYPES_H
+#define _STL_ITERATOR_BASE_TYPES_H
+namespace std {
+	struct random_access_iterator_tag {};
+}
+#endif
 
 namespace ft {
 

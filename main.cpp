@@ -1,7 +1,8 @@
 #include "vector.hpp"
+#include <vector>
 #include <iostream>
 #include <sstream>
-#include <vector>
+#include <typeinfo>
 
 using namespace std;
 
@@ -360,10 +361,12 @@ void	test_reverse_iterator() {
 }
 
 int main() {
-	//test_constructors();
-	//test_swap();
-	//test_assign();
-	//test_clear();
-	//test_at_and_index();
+	test_constructors();
+	test_swap();
+	test_assign();
+	test_clear();
+	test_at_and_index();
 	test_reverse_iterator();
+	ft::vector<int>::iterator it;
+	ft::vector<int>::const_iterator cit(it);
 }

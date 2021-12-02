@@ -1,9 +1,11 @@
 #pragma  once
-#include <memory>	// std::allocator
-#include <stdexcept>	// std::exception
-#include <algorithm>	// std::reverse_copy((
-#include "normal_iterator.hpp"
-#include "reverse_iterator.hpp"
+#include <memory>
+#include <stdexcept>
+#include <algorithm>
+// TODO: normal includes 
+#include "../iterator/normal_iterator.hpp"
+#include "../iterator/reverse_iterator.hpp"
+#include "../utilities/comparison.hpp"
 
 namespace ft {
 
@@ -138,8 +140,7 @@ public:
 			throw std::length_error("Cannot reserve given amount of memory");
 		if (new_cap <= _capacity) return;
 		pointer new_mem = _alloc.allocate(new_cap);
-		construct(iterator(new_mem), iterator(new_mem + new_cap),
-				value_type()); // XXX: is this correct?
+		construct(iterator(new_mem), iterator(new_mem + new_cap), value_type());
 		std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, new_cap, _size);
 	}
@@ -154,8 +155,7 @@ public:
 			return;
 		}
 		pointer new_mem = _alloc.allocate(count);
-		construct(iterator(new_mem), iterator(new_mem + count),
-				value);
+		construct(iterator(new_mem), iterator(new_mem + count), value);
 		if (_size) std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, count, count);
 	}
@@ -210,8 +210,7 @@ public:
 	}
 private:
 // count values 
-	void	_insert(iterator pos, size_type count, const_reference value,
-			fill_type) {
+	void	_insert(iterator pos, size_type count, const_reference value, fill_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().2");
 		if (count == 0) return;
@@ -225,8 +224,7 @@ private:
 	}
 // range 
 	template <class InputIt>
-	void	_insert(iterator pos, InputIt first, InputIt last,
-			range_type) {
+	void	_insert(iterator pos, InputIt first, InputIt last, range_type) {
 		if (pos < begin() || pos > end())
 			throw std::out_of_range("Invalid iterator in insert().3");
 		if (first == last) return;
@@ -311,7 +309,7 @@ void	swap(vector<T, Alloc>&a, vector<T, Alloc>& b) {
 template <typename T, class Alloc>
 bool operator == (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	if (a.size() != b.size()) return false;
-	return std::equal(a.begin(), a.end(), b.begin());
+	return ft::equal(a.begin(), a.end(), b.begin());
 }
 template <typename T, class Alloc>
 bool operator != (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
@@ -319,7 +317,7 @@ bool operator != (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 }
 template <typename T, class Alloc>
 bool operator < (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
-	return std::lexicographical_compare(a.begin(), a.end(),
+	return ft::lexicographical_compare(a.begin(), a.end(),
 					    b.begin(), b.end());
 }
 template <typename T, class Alloc>

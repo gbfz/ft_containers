@@ -1,6 +1,6 @@
 #pragma  once
+#include "../utilities/ft_type_traits.hpp"
 #include "ft_iterator_base_types.hpp"
-#include "ft_type_traits.hpp"
 
 namespace ft {
 
@@ -92,53 +92,23 @@ private:
 	iterator_to_pointer(__base_type ptr) {
 		return ptr.operator->();
 	}
-};
+}; // ! class reverse iterator
 
-/*
-// iterator comparison 
-template<typename type>
-inline bool
-operator ==
+// iterator difference 
+template <typename typeL, typename typeR>
+inline typename reverse_iterator<typeL>::difference_type
+operator -
+(const reverse_iterator<typeL>& lhs,
+ const reverse_iterator<typeR>& rhs) {
+	return lhs.base() - rhs.base();
+}
+template <typename type>
+inline typename reverse_iterator<type>::difference_type
+operator -
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return lhs.base() == rhs.base();
+	return lhs.base() - rhs.base();
 }
-template<typename type>
-inline bool
-operator !=
-(const reverse_iterator<type>& lhs,
- const reverse_iterator<type>& rhs) {
-	return lhs.base() != rhs.base();
-}
-template<typename type>
-inline bool
-operator <
-(const reverse_iterator<type>& lhs,
- const reverse_iterator<type>& rhs) {
-	return lhs.base() < rhs.base();
-}
-template<typename type>
-inline bool
-operator >
-(const reverse_iterator<type>& lhs,
- const reverse_iterator<type>& rhs) {
-	return lhs.base() > rhs.base();
-}
-template<typename type>
-inline bool
-operator <=
-(const reverse_iterator<type>& lhs,
- const reverse_iterator<type>& rhs) {
-	return lhs.base() <= rhs.base();
-}
-template<typename type>
-inline bool
-operator >=
-(const reverse_iterator<type>& lhs,
- const reverse_iterator<type>& rhs) {
-	return lhs.base() >= rhs.base();
-}
-*/
 
 // iterator comparison 
 template <typename it, typename cit>
