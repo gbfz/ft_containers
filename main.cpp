@@ -12,7 +12,7 @@ void	print(const vector& v, std::ostream& stream = std::cout) {
 	for (typename vector::const_iterator it = v.begin();
 	     it < v.end(); ++it)
 		stream << *it << ' ';
-	stream << '\n';
+	stream << endl;
 }
 
 // test comparison 
@@ -48,8 +48,8 @@ bool	test_property(const T& a, const T& b, bool silent = false) {
 	}
 	if (silent) return false;
 	cout << "bad\n";
-	cout << "std: " << a << '\n';
-	cout << " ft: " << b << '\n';
+	cout << "|-> std: " << a << endl;
+	cout << "|->  ft: " << b << endl;
 	return false;
 }
 // compare max 
@@ -143,7 +143,7 @@ void	compare_all_properties
 		   compare_at_and_index(a, b, true);
 	print(a, a_stream); print(b, b_stream);
 	all_good &= a_stream.str() == b_stream.str();
-	cout << (all_good ? "all is good!" : "something went wrong") << '\n';
+	cout << (all_good ? "all is good!" : "something went wrong") << endl;
 }
 
 // constructors 
@@ -354,10 +354,40 @@ void	test_reverse_iterator() {
 	print(a); print(b);
 	for (ft::vector<int>::reverse_iterator it = a.rbegin(); it < a.rend(); ++it)
 		cout << *it << ' ';
-	cout << '\n';
+	cout << endl;
 	for (std::vector<int>::reverse_iterator it = b.rbegin(); it < b.rend(); ++it)
 		cout << *it << ' ';
-	cout << '\n';
+	cout << endl;
+}
+
+// test insert 
+void test_insert() {
+	std::vector<string> a;
+	 ft::vector<string> b;
+	a.resize(15);
+	b.resize(15);
+	std::vector<string>::iterator itf = a.begin() + 4;
+	 ft::vector<string>::iterator its = b.begin() + 4;
+	a.insert(--itf, "wow");
+	b.insert(--its, "wow");
+	compare_all_properties(a, b);
+	print(a); print(b);
+	std::vector<string> a2;
+	 ft::vector<string> b2;
+}
+
+void test_erase() {
+	cout << endl << "__ test erase ¯¯" << endl;
+	std::vector<int> a;
+	 ft::vector<int> b;
+	for (size_t i = 0; i < 12; ++i) {
+		a.push_back(i); a.push_back(i);
+		b.push_back(i); b.push_back(i);
+	}
+	a.erase(std::unique(a.begin(), a.end()), a.end());
+	b.erase(std::unique(b.begin(), b.end()), b.end());
+	compare_all_properties(a, b);
+	print(a); print(b);
 }
 
 int main() {
@@ -369,4 +399,6 @@ int main() {
 	test_reverse_iterator();
 	ft::vector<int>::iterator it;
 	ft::vector<int>::const_iterator cit(it);
+	test_insert();
+	test_erase();
 }

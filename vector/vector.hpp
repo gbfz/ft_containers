@@ -1,11 +1,10 @@
 #pragma  once
 #include <memory>
+#include <algorithm>
+#include "iterator.hpp"
+#include "comparison.hpp"
 #include <stdexcept>
 #include <algorithm>
-// TODO: normal includes 
-#include "../iterator/normal_iterator.hpp"
-#include "../iterator/reverse_iterator.hpp"
-#include "../utilities/comparison.hpp"
 
 namespace ft {
 
@@ -26,6 +25,7 @@ public:
 	typedef ft::normal_iterator<const_pointer, vector> 	const_iterator;
 	typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
 	typedef ft::reverse_iterator<iterator>			reverse_iterator;
+
 protected:
 // member fields 
 	allocator_type	_alloc;
@@ -34,6 +34,7 @@ protected:
 	size_type	_capacity;
 	typedef true_type	fill_type;
 	typedef false_type	range_type;
+
 // memory methods 
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
@@ -49,8 +50,11 @@ protected:
 	}
 	void	construct(const iterator& first, const iterator& last,
 			  const_reference value) {
+		std::for_each(first, last, [&](const iterator& it) { _alloc.construct(&(*it), value); });
+		/*
 		for (iterator it(first); it < last; ++it)
 			construct(it, value);
+		*/
 	}
 // destroy
 	void	destroy(const iterator& it) {
@@ -60,6 +64,7 @@ protected:
 		for (iterator it(first); it < last; ++it)
 			destroy(it);
 	}
+
 public:
 // constructors, destructor 
 	vector(): // {
@@ -98,6 +103,7 @@ public:
 	~vector() {
 		if (_capacity) _alloc.deallocate(_mem, _capacity);
 	}
+
 // = 
 	vector&	operator = (const vector& other) {
 		if (this == &other) return *this;
@@ -106,12 +112,13 @@ public:
 		update_mem(new_mem, other.capacity(), other.size());
 		return *this;
 	}
+
 // assign 
-private:
+private: // only dispatcher is public
 // one value 
 	void	_assign(size_type count, const_reference value, fill_type) {
 		if (count > max_size())
-			throw std::length_error("Attempt to assign() too many values to vector");
+			throw std::length_error("Attempt to assign too many values");
 		resize(count);
 		construct(begin(), end(), value);
 	}
@@ -120,20 +127,20 @@ private:
 	void	_assign(InputIt first, InputIt last, range_type) {
 		size_type dist = std::abs(std::distance(first, last));
 		if (dist > max_size())
-			throw std::length_error("Attempt to assign() too many values to vector");
+			throw std::length_error("Attempt to assign too many values");
 		pointer new_mem = _alloc.allocate(dist);
 		if (first < last)
 			std::copy(first, last, new_mem);
 		else std::reverse_copy(last, first, new_mem);
 		update_mem(new_mem, std::max(_capacity, dist), dist);
 	}
-public:
-// dispatch disambiguation 
+public: // assign dispatch disambiguation 
 	template <typename First, typename Second>
 	void	assign(First first, Second second) {
 		typedef typename is_integral<First>::type assign_type;
 		_assign(first, second, assign_type());
 	}
+
 // reserve 
 	void	reserve(size_type new_cap) {
 		if (new_cap >= max_size())
@@ -144,6 +151,7 @@ public:
 		std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, new_cap, _size);
 	}
+
 // resize 
 	void	resize(size_type count, value_type value = value_type()) {
 		if (_capacity + count >= max_size())
@@ -159,11 +167,13 @@ public:
 		if (_size) std::copy(begin(), end(), new_mem);
 		update_mem(new_mem, count, count);
 	}
+
 // clear 
 	void clear() {
 		destroy(begin(), end());
 		_size = 0;
 	}
+
 // [], at 
 	reference operator [] (size_type pos) {
 		return _mem[pos];
@@ -181,6 +191,7 @@ public:
 			throw std::out_of_range("Invalid pos in at()");
 		return _mem[pos];
 	}
+
 // iterators 
 // begin
 	iterator begin() { return iterator(_mem); }
@@ -194,6 +205,7 @@ public:
 // rend
 	reverse_iterator rend() { return reverse_iterator(begin()); }
 	const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
 // insert 
 // one value 
 	iterator insert(iterator pos, const_reference value) {
@@ -201,7 +213,7 @@ public:
 			throw std::out_of_range("Invalid pos in insert().1");
 		difference_type offset = std::distance(begin(), pos);
 		if (_size == _capacity)
-			reserve(_size + 1);
+			reserve(_size * 2 + !_size);
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + 1);
 		construct(pos, value);
@@ -243,9 +255,9 @@ public:
 // dispatch disambiguation 
 	template <typename First, typename Second>
 	void	insert(iterator pos, First first, Second second) {
-		typedef typename is_integral<First>::type insert_type;
-		_insert(pos, first, second, insert_type());
+		_insert(pos, first, second, typename is_integral<First>::type());
 	}
+
 // erase 
 	iterator erase(iterator pos) {
 		if (pos < begin() || pos >= end())
@@ -264,19 +276,23 @@ public:
 		_size -= std::distance(first, last);
 		return last + (last < end());
 	}
+
 // push_back 
 	void push_back(const_reference value) {
 		if (_size == _capacity)
-			reserve((_capacity | !_capacity) << !!_capacity);
+			reserve(_capacity * 2 + !_capacity);
+			//reserve((_capacity | !_capacity) << !!_capacity);
 		*(_mem + _size) = value;
 		_size += 1;
 	}
+
 // pop_back 
 	void pop_back() {
 		if (!empty())
 			destroy(end() - 1); // what...
 		_size -= 1;
 	}
+
 // swap 
 	void	swap(vector& other) {
 		if (this == &other) return;
@@ -284,6 +300,7 @@ public:
 		*this = other;
 		other = t;
 	}
+
 // accessors 
 	reference	front() const { return *_mem; }
 	reference	back() const { return *(_mem + _size - !empty()); }
@@ -297,6 +314,7 @@ public:
 		return max;
 	}
 	allocator_type	get_allocator() const { return _alloc; }
+
 }; // ! class vector
 
 // swap 
@@ -311,23 +329,28 @@ bool operator == (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	if (a.size() != b.size()) return false;
 	return ft::equal(a.begin(), a.end(), b.begin());
 }
+
 template <typename T, class Alloc>
 bool operator != (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	return !(a == b);
 }
+
 template <typename T, class Alloc>
 bool operator < (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	return ft::lexicographical_compare(a.begin(), a.end(),
 					    b.begin(), b.end());
 }
+
 template <typename T, class Alloc>
 bool operator > (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	return b < a;
 }
+
 template <typename T, class Alloc>
 bool operator <= (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	return !(b < a);
 }
+
 template <typename T, class Alloc>
 bool operator >= (const vector<T, Alloc>& a, const vector<T, Alloc>& b) {
 	return !(a < b);

@@ -11,18 +11,19 @@ bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2) {
 }
 
 template <typename typeL, typename typeR>
-static bool __predicate(const typeL& lhs, const typeR& rhs) {
+static bool __is_equal(const typeL& lhs, const typeR& rhs) {
 	return lhs == rhs;
 }
 
-template <typename InpIt1, typename InpIt2, class BiPred>
-bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2, BiPred pred = __predicate) {
+template <typename InpIt1, typename InpIt2, class Compare>
+bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2, Compare comp = __is_equal) {
 	for ( ; first1 < last1; ++first1, ++first2)
-		if (pred(*first1, *first2) == false) return false;
+		if (comp(*first1, *first2) == false) return false;
 	return true;
 }
 
 // ft::lexicographical_compare 
+/*
 template <typename InpIt1, typename InpIt2>
 bool lexicographical_compare(InpIt1 first1, InpIt1 last1,
 			     InpIt2 first2, InpIt2 last2) {
@@ -32,6 +33,7 @@ bool lexicographical_compare(InpIt1 first1, InpIt1 last1,
 	}
 	return first1 == last1 && first2 != last2;
 }
+*/
 
 template <typename typeL, typename typeR>
 static bool __is_less(const typeL& lhs, const typeR& rhs) {
