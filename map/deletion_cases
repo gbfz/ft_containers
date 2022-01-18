@@ -1,0 +1,26 @@
+delete black node with at least 1 child:
+or delete red node:
+	1. p has at most 1 internal child:
+		if p has 1 internal child:
+			delete p, promote the child
+			if p was black, color child black
+		else delete p and promote one of external nodes
+	2. p has 2 children:
+		find (r = predecessor) of p
+		exchange entries of p and r
+		resolve again(r)
+
+(p = node to delete, y = sister, x = red niece, z = parent)
+delete black node with no children:
+	color the promoted node double black
+	1. y is black and has red child x
+		rotate(y)
+		x.color = black, y = z.color, z.color = black
+	2. y is black and has no red kids
+		p.color = black, y.color = red
+		if (z.color == red) z.color = black
+		else if (z != root) resolve again(z)
+	3. y is red
+		rotate(y) (y = parent, z = kid, p = kid->kid)
+		y.color = black, z.color = red
+		resolve again(p)
