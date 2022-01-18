@@ -222,24 +222,31 @@ public:
 
 // erase 
 public:
+	Nodeptr get_red_niece(Nodeptr node) {
+		if (node->left && is_red(node->left))
+			return node->left;
+		if (node->right && is_red(node->right))
+			return node->right;
+		return nil;
+	}
+
 	void erase_rebalance(Nodeptr p) {
-		Nodeptr z = p->mom, y = is_left_child(p) ? z->right : z->left;
+		if (p == root) return;
+		Nodeptr z = p->mom, y = is_left_child(p) ? z->right : z->left, x;
 		if (is_red(y)) {						// case 3
 			if (is_left_child(y))
 				rotate_right(z);
 			else rotate_left(z);
 			y->color = black, z->color = red;
-			return erase_rebalance(p);
+			erase_rebalance(p);
 		}
-		Nodeptr x = is_red(y->left) ? y->left : y->right;
-		if (is_red(x)) {						// case 2
-			Nodeptr a = x, b = y, c = z;
+		if (is_red(x = get_red_niece(y))) {				// case 2
 			color_t old_color = z->color;
 			if (is_left_child(y))
 				rotate_right(z);
 			else rotate_left(z);
-			a->color = c->color = p->color = black;
-			b->color = old_color;
+			x->color = z->color = p->color = black;
+			y->color = old_color;
 		} else {							// case 1
 			p->color = black, y->color = red;
 			if (z->color == red) z->color = black;
@@ -264,12 +271,14 @@ public:
 			if (node->color == black) kid->color = black;
 			return delete node;
 		} else {
+			if (is_black(node))
+				erase_rebalance(node);
 			if (node == root)
 				root = nil;
 			else if (is_left_child(node))
 				node->mom->left = nil;
 			else node->mom->right = nil;
-			erase_rebalance(node);
+			return delete node;
 		}
 	}
 
@@ -282,20 +291,13 @@ public:
 
 void test1() {
 	RBTree<int> t;
-	t.insert(9);
-	t.print();
-	t.insert(10);
-	t.print();
-	t.insert(11);
-	t.print();
-	t.insert(12);
-	t.print();
-	t.insert(13);
-	t.print();
-	t.insert(3);
-	t.print();
-	t.insert(4);
-	t.print();
+	t.insert(9); t.print();
+	t.insert(10); t.print();
+	t.insert(11); t.print();
+	t.insert(12); t.print();
+	t.insert(13); t.print();
+	t.insert(3); t.print();
+	t.insert(4); t.print();
 }
 
 void test2() {
@@ -329,6 +331,18 @@ void test4() {
 	t.insert(6), t.print();
 	t.insert(20), t.print();
 	t.erase(14), t.print();
+	t.erase(6), t.print();
+	t.erase(2), t.print();
+	t.erase(9), t.print();
+	t.erase(20), t.print();
+}
+
+void test5() {
+	RBTree<int> t(9);
+	t.insert(20), t.print();
+	t.insert(2), t.print();
+	t.insert(6), t.print();
+	t.erase(6), t.print();
 }
 
 int main() {
