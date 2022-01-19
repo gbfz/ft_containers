@@ -139,9 +139,9 @@ public:
 	bool is_red(const Nodeptr node) const { return node->color == red; }
 
 private:
-// tell mom her kid has changed 
+// update mom 
 	void update_mom(Nodeptr node, Nodeptr newNode) {
-		if (is_nil(node->mom))
+		if (node == root)
 			root = newNode;
 		else if (is_left_child(node))
 			node->mom->left = newNode;
@@ -173,8 +173,8 @@ private:
 		node->mom = origLeft;
 	}
 
-// recolor and rotate (insert fixup ?)
-	void recolor_and_rotate(Nodeptr node) {
+// insert 
+	void insert_rebalance(Nodeptr node) {
 		Nodeptr ma = node->mom;
 		if (node != root && is_red(ma)) {
 			Nodeptr grandma = ma->mom;
@@ -182,7 +182,7 @@ private:
 					  grandma->right : grandma->left;
 			if (not_nil(aunt) && is_red(aunt)) {
 				flip_color(ma), flip_color(aunt), flip_color(grandma);
-				recolor_and_rotate(grandma);
+				insert_rebalance(grandma);
 			}
 			else if (is_left_child(ma)) {
 				if (is_right_child(node))
@@ -200,7 +200,6 @@ private:
 		root->color = black;
 	}
 
-// insert 
 	Nodeptr insert(Nodeptr where, Nodeptr node) {
 		if (is_nil(where)) return node;
 		if (node->key < where->key) {
@@ -217,7 +216,7 @@ public:
 	void insert(const value_type& data) {
 		Nodeptr node = create_node(data);
 		root = insert(root, node);
-		recolor_and_rotate(node);
+		insert_rebalance(node);
 	}
 
 // erase 
@@ -230,55 +229,49 @@ public:
 		return nil;
 	}
 
+	void rotate_x_around_y(Nodeptr x, Nodeptr y) {
+		if (is_left_child(x))
+			rotate_right(y);
+		else rotate_left(y);
+	}
+
 	void erase_rebalance(Nodeptr p) {
 		if (p == root) return;
-		Nodeptr z = p->mom, y = is_left_child(p) ? z->right : z->left, x;
-		if (is_red(y)) {						// case 3
-			if (is_left_child(y))
-				rotate_right(z);
-			else rotate_left(z);
-			y->color = black, z->color = red;
-			erase_rebalance(p);
+		Nodeptr ma = p->mom,
+			sis = is_left_child(p) ? ma->right : ma->left,
+			niece = get_red_niece(sis);
+		if (is_red(niece)) {					// case 1
+			color_t old_color = ma->color;
+			rotate_x_around_y(sis, ma);
+			niece->color = ma->color = p->color = black;
+			sis->color = old_color;
 		}
-		if (is_red(x = get_red_niece(y))) {				// case 2
-			color_t old_color = z->color;
-			if (is_left_child(y))
-				rotate_right(z);
-			else rotate_left(z);
-			x->color = z->color = p->color = black;
-			y->color = old_color;
-		} else {							// case 1
-			p->color = black, y->color = red;
-			if (z->color == red) z->color = black;
-			else if (z != root)
-				erase_rebalance(z);
+		else if (is_black(niece)) {				// case 2
+			p->color = black, sis->color = red;
+			if (ma->color == red) ma->color = black;
+			else if (ma != root) erase_rebalance(ma);
+		}
+		else if (is_red(sis)) {					// case 3
+			rotate_x_around_y(sis, ma);
+			sis->color = black, ma->color = red;
+			return erase_rebalance(p);
 		}
 	}
 
 	void erase(Nodeptr node) {
-		int kids_count = not_nil(node->left) + not_nil(node->right);
-		if (kids_count == 2) {
-			Nodeptr pred = predecessor(node);
-			swap(node->key, pred->key);
-			return erase(pred);
-		} else if (kids_count == 1) {
-			Nodeptr kid = not_nil(node->left) ? node->left : node->right;
-			if (node == root)
-				root = kid;
-			else if (is_left_child(node))
-				node->mom->left = kid;
-			else node->mom->right = kid;
-			if (node->color == black) kid->color = black;
-			return delete node;
-		} else {
-			if (is_black(node))
-				erase_rebalance(node);
-			if (node == root)
-				root = nil;
-			else if (is_left_child(node))
-				node->mom->left = nil;
-			else node->mom->right = nil;
-			return delete node;
+		Nodeptr kid = not_nil(node->left) ? node->left : node->right;
+		switch (not_nil(node->left) + not_nil(node->right)) {
+			case 0: if (is_black(node))
+					erase_rebalance(node);
+				update_mom(node, nil);
+				return delete node;
+			case 1: update_mom(node, kid);
+				if (is_black(node))
+					kid->color = black;
+				return delete node;
+			case 2: Nodeptr pred = predecessor(node);
+				swap(node->key, pred->key);
+				return erase(pred);
 		}
 	}
 
@@ -343,6 +336,8 @@ void test5() {
 	t.insert(2), t.print();
 	t.insert(6), t.print();
 	t.erase(6), t.print();
+	t.erase(9), t.print();
+	t.erase(20), t.print();
 }
 
 int main() {
