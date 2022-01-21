@@ -23,6 +23,17 @@ struct enable_if_same<T, T, C> {
 	typedef C type;
 };
 
+// remove const 
+template <typename T>
+struct remove_const {
+	typedef T type;
+};
+
+template <typename T>
+struct remove_const<const T> {
+	typedef T type;
+};
+
 // is_integral 
 template <typename>
 struct is_integral {

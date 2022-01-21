@@ -4,6 +4,7 @@
 #ifndef _STL_ITERATOR_BASE_TYPES_H
 namespace std {
 	struct random_access_iterator_tag {};
+	struct bidirectional_iterator_tag {};
 }
 #endif
 

@@ -7,30 +7,39 @@ namespace ft {
 template <typename _iterator, typename _container>
 class normal_iterator {
 protected:
-// underlying memory accessor 
+// memory accessor 
 	_iterator				_base;
 	typedef typename _container::pointer	this_iterator;
 
 public:
-// member types definitions 
+// member type definitions 
 	typedef iterator_traits<_iterator>		traits;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
 	typedef typename traits::reference		reference;
 	typedef typename traits::difference_type	difference_type;
 	typedef typename traits::iterator_category	iterator_category;
-// constructors
+
+// ctors, dtor  
 	// Default constructor
 	normal_iterator(): _base(_iterator()) {}
 	// Regular copy constructor
 	explicit normal_iterator(const _iterator& other): _base(other) {}
 	// Copy constructor that allows iterator to const_iterator conversion
-	template <typename other_iterator>
+	template <typename other>
 	normal_iterator(const normal_iterator
-			<other_iterator, typename enable_if_same<this_iterator,
-								 other_iterator,
-								 _container>
-			::type>& other): _base(other.base()) {}
+			<other, typename enable_if_same<this_iterator, other,
+			_container>::type>& source): _base(source.base()) {}
+	~normal_iterator() {}
+
+// operator = 
+	template <typename other>
+	normal_iterator operator = (const normal_iterator
+			<other, typename enable_if_same<this_iterator, other,
+			_container>::type>& source) {
+		_base = source.base();
+		return *this;
+	}
 
 // *, ->, [] 
 	reference operator * () const {
@@ -49,9 +58,9 @@ public:
 		return *this;
 	}
 	normal_iterator operator ++ (int) {
-		normal_iterator tmp = *this;
+		normal_iterator it = *this;
 		++_base;
-		return tmp;
+		return it;
 	}
 
 // -- 
@@ -60,9 +69,9 @@ public:
 		return *this;
 	}
 	normal_iterator operator -- (int) {
-		normal_iterator tmp = *this;
+		normal_iterator it = *this;
 		--_base;
-		return tmp;
+		return it;
 	}
 
 // +, += 

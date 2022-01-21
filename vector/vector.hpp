@@ -4,7 +4,6 @@
 #include "iterator.hpp"
 #include "comparison.hpp"
 #include <stdexcept>
-#include <algorithm>
 
 namespace ft {
 
@@ -50,11 +49,8 @@ protected:
 	}
 	void	construct(const iterator& first, const iterator& last,
 			  const_reference value) {
-		std::for_each(first, last, [&](const iterator& it) { _alloc.construct(&(*it), value); });
-		/*
 		for (iterator it(first); it < last; ++it)
 			construct(it, value);
-		*/
 	}
 // destroy
 	void	destroy(const iterator& it) {
