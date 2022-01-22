@@ -1,19 +1,20 @@
 #pragma once
-// TODO: normal includes 
+// TODO: delete 
 #include <iostream>
 #include <unistd.h>
 using namespace std;
+// TODO: normal includes 
 #include "../map/rbnode.hpp"
 #include "../utilities/ft_type_traits.hpp"
 #include "ft_iterator_base_types.hpp"
 
 namespace ft {
 
-// not_nil method i need for iterator movement 
+// nil check methods i need for iterator movement 
 template <typename Nodeptr> static inline
-bool not_nil(Nodeptr node) {
-	return node->is_nil == false;
-}
+bool is_nil(Nodeptr node) { return node->is_nil == true; }
+template <typename Nodeptr> static inline
+bool not_nil(Nodeptr node) { return node->is_nil == false; }
 
 // tree increment 
 template <typename Nodeptr> static
@@ -39,7 +40,7 @@ Nodeptr	tree_increment(Nodeptr node) {
 // tree decrement 
 template <typename Nodeptr> static 
 Nodeptr	tree_decrement(Nodeptr node) {
-	if (node->color == red && node->right->mom == node)
+	if (is_nil(node))
 		return node = node->mom;
 	if (not_nil(node->left)) {
 		node = node->left;
@@ -67,7 +68,7 @@ protected:
 
 public:
 // member type definitions 
-	typedef iterator_traits<_node>			traits;
+	typedef iterator_traits<_node*>			traits;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
 	typedef typename traits::reference		reference;
@@ -97,11 +98,11 @@ public:
 
 // *, -> 
 	reference operator * () const {
-		return *_base;
+		return *(_base->value);
 	}
 
 	pointer operator -> () const {
-		return _base;
+		return _base->value;
 	}
 
 // ++ 

@@ -17,7 +17,7 @@ struct RBNode {
 	RBNode*		mom;
 	RBNode*		left;
 	RBNode*		right;
-	bool		is_nil;
+	bool		is_nil; // sorry 
 
 // unnecessary ctors, dtor 
 	RBNode():

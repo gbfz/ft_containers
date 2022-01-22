@@ -1,11 +1,12 @@
 #include <iostream>
 #include "rbnode.hpp"
-// TODO: normal includes 
-#include "../iterator/tree_iterator.hpp"
-#include "../iterator/iterator.hpp"
+// TODO: delete 
 using namespace std; // TODO: delete !!!
 #include <unistd.h>
 #include <map>
+// TODO: normal includes 
+#include "../iterator/tree_iterator.hpp"
+#include "../iterator/iterator.hpp"
 
 namespace ft {
 
@@ -14,16 +15,15 @@ namespace ft {
 #define BLK "\033[1;30m"
 #define RESET "\033[0m"
 
-template <typename Value, class Compare = std::less<Value>,
-	  class Allocator = std::allocator<Value> >
+template <typename Value, typename Compare = std::less<Value>, class Allocator = std::allocator<Value> >
 class RBTree {
 public:
 // type definitions 
 	typedef Value					value_type;
-	typedef Compare					value_compare;
 	typedef Allocator				Value_alloc;
-	typedef typename Value_alloc::reference 	reference;
-	typedef typename Value_alloc::const_reference	const_reference;
+	typedef Compare					compare_type;
+	// typedef typename Value_alloc::reference 	reference;
+	// typedef typename Value_alloc::const_reference	const_reference;
 	typedef typename Value_alloc::pointer		pointer;
 	typedef typename Value_alloc::const_pointer	const_pointer;
 	typedef typename Value_alloc::
@@ -34,28 +34,33 @@ public:
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 
+private:
 // data fields 
 	Value_alloc	value_alloc;
 	Node_alloc	node_alloc;
+	compare_type	comp;
 	Nodeptr		nil;
 	Nodeptr		header;
 	Nodeptr		root;
 	size_t		tree_size;
 
+public:
 // ctors, dtor 
 	RBTree(): value_alloc(Value_alloc()), node_alloc(Node_alloc()),
-		nil(create_nil_node()), header(create_node(Value())), root(header), tree_size(0) {}
-	RBTree(const value_type& value): value_alloc(Value_alloc()), node_alloc(Node_alloc()),
-		nil(create_nil_node()), header(nil), root(create_node(value)), tree_size(1) {
+		comp(compare_type()),
+		nil(create_nil_node()), header(nil), root(nil), tree_size(0) {
 			root->color = black;
 			header->mom = root;
 			header->left = root;
 			header->right = root;
 			header->color = red;
+			header->is_nil = true;
 	}
-	RBTree(const RBTree& other): value_alloc(other.value_alloc), node_alloc(other.node_alloc),
+	explicit RBTree(const RBTree& other): value_alloc(other.value_alloc), node_alloc(other.node_alloc), comp(other.comp),
 		nil(other.nil), header(other.header), root(other.root), tree_size(other.tree_size) {}
 	~RBTree() {
+		clear();
+		if (header != nil) delete header;
 		delete nil;
 	}
 
@@ -65,7 +70,8 @@ public:
 		print(node->right, offset + 4);
 		if (is_red(node)) std::cout << RED;
 		else std::cout << BLK;
-		std::cout << std::string(offset, '-') << ' ' << node->value << std::endl;
+		std::cout << std::string(offset, '-');// << ' ' << node->value << std::endl;
+		std::cout << node->value.first << ", " << node->value.second << endl;
 		std::cout << RESET;
 		print(node->left, offset + 4);
 	}
@@ -95,8 +101,7 @@ private:
 	}
 
 // is nil 
-	// bool is_nil(Nodeptr node) const { return node == nil || node == header; }
-	bool is_nil(Nodeptr node) const { return node == nil || node == header; }
+	bool is_nil(Nodeptr node) const { return node == nil; }
 	bool not_nil(Nodeptr node) const { return !is_nil(node); }
 
 // children 
@@ -111,7 +116,7 @@ private:
 	}
 
 public:
-// successor 
+/*// successor 
 	Nodeptr successor(Nodeptr node) {
 		if (is_nil(node)) return nil;
 		if (not_nil(node->right)) {
@@ -128,6 +133,7 @@ public:
 		return node;
 	}
 
+*/
 // predecessor 
 	Nodeptr predecessor(Nodeptr node) {
 		if (is_nil(node)) return nil;
@@ -155,6 +161,30 @@ public:
 			else node = node->right;
 		}
 		return node;
+	}
+
+// delete node and children 
+	void	delete_node(Nodeptr node) {
+		if (is_nil(node))
+			return;
+		delete_node(node->left);
+		delete_node(node->right);
+		if (is_left_child(node))
+			node->mom->left = nil;
+		else node->mom->right = nil;
+		value_alloc.destroy(&node->value);
+		// value_alloc.deallocate(&node->value, 1);
+		node_alloc.destroy(node);
+		node_alloc.deallocate(node, 1);
+	}
+
+// clear 
+	void clear() {
+		delete_node(root);
+		// root = header;
+		header->left = root;
+		header->mom = root;
+		tree_size = 0;
 	}
 
 private:
@@ -250,10 +280,11 @@ private:
 	Nodeptr insert(Nodeptr where, Nodeptr node) {
 		if (is_nil(where)) return node;
 		if (node->value < where->value) {
+		// if (comp(node->value, where->value)) {
 			where->left = insert(where->left, node);
 			where->left->mom = where;
 		}
-		else if (node->value > where->value) {
+		else {
 			where->right = insert(where->right, node);
 			where->right->mom = where;
 		}
@@ -270,11 +301,8 @@ public:
 		insert_rebalance(node);
 		header->left = leftmost(root);
 		header->mom = rightmost(root);
-		/*
-		Nodeptr max = rightmost(root);
-		max->right = header;
-		header->mom = max;
-		*/
+		// header->right = header;
+		++tree_size;
 	}
 
 private:
@@ -345,9 +373,9 @@ public:
 		Nodeptr node = find(data);
 		if (not_nil(node)) erase(node);
 		header->left = leftmost(root);
-		// header->left = header;
 		header->mom = rightmost(root);
-		header->right = header;
+		// header->right = header;
+		--tree_size;
 	}
 
 // begin, rbegin 
@@ -367,11 +395,9 @@ public:
 // end, rend 
 	iterator end() {
 		return iterator(header);
-		// return iterator(header->right);
 	}
 	const_iterator end() const {
 		return const_iterator(header);
-		// return const_iterator(header->right);
 	}
 	reverse_iterator rend() {
 		return reverse_iterator(begin());
@@ -383,144 +409,3 @@ public:
 }; // ! rbtree 
 
 } // ! namespace ft 
-
-using ft::RBTree;
-
-void test1() {
-	RBTree<int> t;
-	t.insert(9); t.print();
-	t.insert(10); t.print();
-	t.insert(11); t.print();
-	t.insert(12); t.print();
-	t.insert(19); t.print();
-	t.insert(1); t.print();
-	t.insert(2); t.print();
-	t.insert(0); t.print();
-}
-
-void test2() {
-	RBTree<int> t(5);
-	t.insert(9), t.print();
-	t.erase(5), t.print();
-	t.insert(14), t.print();
-	t.insert(2), t.print();
-	t.insert(6), t.print();
-	t.insert(20), t.print();
-	t.erase(14), t.print();
-	t.erase(6), t.print();
-	t.erase(2), t.print();
-	t.erase(9), t.print();
-	t.erase(20), t.print();
-}
-
-void test3() {
-	RBTree<int> t(9);
-	t.insert(20), t.print();
-	t.insert(2), t.print();
-	t.insert(6), t.print();
-	t.erase(6), t.print();
-	t.erase(9), t.print();
-	t.erase(20), t.print();
-}
-
-void test4() {
-	RBTree<int> t(5);
-	t.insert(39), t.print();
-	t.insert(92), t.print();
-	t.insert(19), t.print();
-	t.insert(74), t.print();
-	t.insert(33), t.print();
-	t.insert(2), t.print();
-	t.insert(110), t.print();
-	t.insert(111), t.print();
-	t.insert(115), t.print();
-	t.insert(35), t.print();
-	t.erase(74), t.print();
-	t.erase(111), t.print();
-	t.erase(39), t.print();
-	t.erase(33), t.print();
-	t.erase(35), t.print();
-}
-
-void test5() {
-	RBTree<int> t(1); t.print();
-	t.insert(4); t.print();
-	t.insert(2); t.print();
-	t.insert(3); t.print();
-	t.erase(1); t.print();
-	t.insert(5), t.print();
-}
-
-void iter_test1() {
-	RBTree<int> t(12); t.print();
-	t.insert(9); t.print();
-	t.insert(500); t.print();
-	t.insert(3); t.print();
-	t.insert(9420); t.print();
-	t.insert(29); t.print();
-	RBTree<int>::iterator it = t.begin();
-	RBTree<int>::iterator ite = t.end();
-	cout << "forward:\n";
-	while (it != ite) {
-		cout << it->value << endl;// usleep(100000);
-		++it;
-	}
-	cout << "and now back:\n";
-	RBTree<int>::iterator i = t.end();
-	while (--i != t.begin()) {
-		cout << i->value << endl;//, usleep(100000);
-	}
-	cout << i->value << endl;
-}
-
-void iter_test2() {
-	RBTree<int> t(12);
-	t.insert(9);
-	t.insert(500);
-	t.insert(3);
-	t.insert(9420);
-	t.insert(29);
-	std::map<int, bool> m;
-	m[12] = true;
-	m[9] = true;
-	m[500] = true;
-	m[3] = true;
-	m[9420] = true;
-	m[29] = true;
-	RBTree<int>::iterator it = t.begin();
-	RBTree<int>::iterator ite = t.end();
-	std::map<int, bool>::iterator mit = m.begin();
-	std::map<int, bool>::iterator mite = m.end();
-	cout << "Forward:\n";
-	cout <<"\tmine:\n";
-	while (it != ite) {
-		cout << it->value << endl;
-		++it;
-	}
-	cout << "\tstl:\n";
-	while (mit != mite) {
-		cout << mit->first << endl;
-		++mit;
-	}
-	RBTree<int>::iterator it2 = t.end();
-	RBTree<int>::iterator ite2 = t.begin();
-	std::map<int, bool>::iterator mit2 = m.end();
-	std::map<int, bool>::iterator mite2 = m.begin();
-	cout << "\nBack:\n";
-	cout <<"\tmine:\n";
-	while (it2 != ite2) {
-		--it2;
-		cout << it2->value << endl;
-	}
-	cout << "\tstl:\n";
-	while (mit2 != mite2) {
-		--mit2;
-		cout << mit2->first << endl;
-	}
-}
-
-int main() {
-	test5();
-	cout << "\niters:\n";
-	iter_test2();
-}
