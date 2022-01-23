@@ -50,7 +50,12 @@ struct RBNode {
 		right = other->right;
 		return this;
 	}
-
+// swap 
+	void swap(RBNode* b) {
+		T t = b->value;
+		b->value = value;
+		value = t;
+	}
 };
 
 // node comparison 
@@ -63,11 +68,16 @@ operator == (const RBNode<T>* lhs, const RBNode<T>* rhs) {
 		lhs->left == rhs->left &&
 		lhs->right == rhs->right;
 }
-
 template <typename T>
 inline bool
 operator != (const RBNode<T>* lhs, const RBNode<T>* rhs) {
 	return !(lhs == rhs);
+}
+
+// swap 
+template <typename T>
+inline void swap(RBNode<T>* lhs, RBNode<T>* rhs) {
+	lhs->swap(rhs);
 }
 
 } // ! namespace ft

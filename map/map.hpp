@@ -9,7 +9,10 @@
 
 namespace ft {
 
-template <typename Key, typename T, class Compare = std::less<Key>, class Allocator = std::allocator<ft::pair<const Key, T> > >
+template <class Key,
+	 class T,
+	 class Compare = std::less<Key>,
+	 class Allocator = std::allocator<ft::pair<const Key, T> > >
 class map {
 public:
 // member types definitions 
@@ -26,15 +29,12 @@ public:
 	typedef typename Allocator::const_pointer	const_pointer;
 	typedef tree_iterator<value_type>		iterator;
 	typedef tree_iterator<const value_type>		const_iterator;
-	typedef RBTree<value_type, allocator_type>	RBTree;
-	// typedef typename RBTree::iterator		iterator;
-	// typedef typename RBTree::const_iterator		const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 
 private:
 // underlying red-black tree data structure 
-	RBTree tree;
+	RBTree<value_type, allocator_type> tree;
 
 public:
 // ctors, dtor 
@@ -51,8 +51,30 @@ public:
 	map(const map& other): tree(other.tree) {}
 	~map() {}
 
-	void insert(const value_type& d) {
-		tree.insert(d);
+// find
+	iterator find(const Key& key) {
+		return iterator(tree.find_key(key));
+	}
+	const_iterator find(const Key& key) const {
+		return const_iterator(tree.find_key(key));
+	}
+
+// insert 
+	ft::pair<iterator, bool> insert(const value_type& d) {
+		return tree.insert(d);
+	}
+	template <typename InputIt>
+	void insert(InputIt first, InputIt last) {
+		for (; first != last; ++first)
+			tree.insert(*first);
+	}
+
+// erase 
+	void erase(iterator pos) {
+		return tree.erase(pos);
+	}
+	size_type erase(const Key& key) {
+		return tree.erase(key);
 	}
 
 // TODO: hide 

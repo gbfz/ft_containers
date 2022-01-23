@@ -7,6 +7,7 @@ using namespace std; // TODO: delete !!!
 // TODO: normal includes 
 #include "../iterator/tree_iterator.hpp"
 #include "../iterator/iterator.hpp"
+#include "../utilities/pair.hpp"
 
 namespace ft {
 
@@ -70,12 +71,12 @@ public:
 		print(node->right, offset + 4);
 		if (is_red(node)) std::cout << RED;
 		else std::cout << BLK;
-		std::cout << std::string(offset, '-');// << ' ' << node->value << std::endl;
-		std::cout << node->value.first << ", " << node->value.second << endl;
+		std::cout << std::string(offset, '-');
+		std::cout << ' ' << node->value.first << ", " << node->value.second << endl;
 		std::cout << RESET;
 		print(node->left, offset + 4);
 	}
-	void print() {
+	void print() const {
 		print(root, 0);
 		std::cout << std::string(53, '~') << std::endl;
 	}
@@ -84,6 +85,7 @@ private:
 // create nil node 
 	Nodeptr create_nil_node() {
 		Nodeptr _nil = node_alloc.allocate(1);
+		value_alloc.construct(&_nil->value, Value());
 		_nil->mom = _nil->left = _nil->right = 0;
 		_nil->color = black;
 		_nil->is_nil = true;
@@ -101,8 +103,8 @@ private:
 	}
 
 // is nil 
-	bool is_nil(Nodeptr node) const { return node == nil; }
-	bool not_nil(Nodeptr node) const { return !is_nil(node); }
+	bool is_nil(Nodeptr node) const { return node->is_nil == true; }
+	bool not_nil(Nodeptr node) const { return node->is_nil == false; }
 
 // children 
 	bool is_left_child (Nodeptr node) { return node == node->mom->left; }
@@ -116,24 +118,6 @@ private:
 	}
 
 public:
-/*// successor 
-	Nodeptr successor(Nodeptr node) {
-		if (is_nil(node)) return nil;
-		if (not_nil(node->right)) {
-			node = node->right;
-			while (node->left != nil)
-				node = node->left;
-			return node;
-		}
-		Nodeptr ma = node->mom;
-		while (node == ma->right)
-			node = ma, ma = ma->mom;
-		if (node->right != ma)
-			node = ma;
-		return node;
-	}
-
-*/
 // predecessor 
 	Nodeptr predecessor(Nodeptr node) {
 		if (is_nil(node)) return nil;
@@ -152,15 +136,28 @@ public:
 	}
 
 // find 
-	Nodeptr find(const value_type& value) {
-		if (is_nil(root)) return nil; // end()?
+	/*
+	iterator find(const value_type& value) {
+		if (is_nil(root)) return end();
 		Nodeptr node = root;
 		while (not_nil(node) && value != node->value) {
 			if (value < node->value)
 				node = node->left;
 			else node = node->right;
 		}
-		return node;
+		return iterator(node);
+	}
+	*/
+	template <typename Key>
+	iterator find(const Key& key) {
+		if (is_nil(root)) return end();
+		Nodeptr node = root;
+		while (not_nil(node) && key != node->value.first) {
+			if (key < node->value.first)
+				node = node->left;
+			else node = node->right;
+		}
+		return iterator(node);
 	}
 
 // delete node and children 
@@ -173,8 +170,7 @@ public:
 			node->mom->left = nil;
 		else node->mom->right = nil;
 		value_alloc.destroy(&node->value);
-		// value_alloc.deallocate(&node->value, 1);
-		node_alloc.destroy(node);
+		// node_alloc.destroy(node);
 		node_alloc.deallocate(node, 1);
 	}
 
@@ -293,9 +289,10 @@ private:
 
 public:
 // insert data 
-	void insert(const value_type& data) {
-		   // Temp workaround
-		   if (not_nil(find(data))) return;
+	ft::pair<iterator, bool> insert(const value_type& data) {
+		iterator f = find(data.first);
+		if (not_nil(f.base()))
+			return ft::make_pair(f, false);
 		Nodeptr node = create_node(data);
 		root = insert(root, node);
 		insert_rebalance(node);
@@ -303,6 +300,7 @@ public:
 		header->mom = rightmost(root);
 		// header->right = header;
 		++tree_size;
+		return ft::make_pair(iterator(node), true);
 	}
 
 private:
@@ -330,12 +328,12 @@ private:
 		Nodeptr ma = node->mom,
 			sis = is_left_child(node) ? ma->right : ma->left,
 			niece = get_best_red_niece(node, sis);
-		if (is_red(sis)) {					// case 1
+		if (is_red(sis)) {						// case 1
 			rotate_x_around_y(sis, ma);
-			sis->color = black, ma->color = black;
+			sis->color = black, ma->color = red;
 			return erase_rebalance(node);
 		}
-		if (is_red(niece)) {					// case 2
+		if (is_red(niece)) {						// case 2
 			if (is_right_child(node) && is_right_child(niece))
 				rotate_left(sis);
 			else if (is_left_child(node) && is_left_child(niece))
@@ -345,7 +343,7 @@ private:
 			niece->color = ma->color = black;
 			sis->color = old_ma_color;
 		}
-		else {							// case 3
+		else {								// case 3
 			node->color = black, sis->color = red;
 			if (ma->color == red) ma->color = black;
 			else if (ma != root) erase_rebalance(ma);
@@ -353,6 +351,10 @@ private:
 	}
 
 // erase node 
+	void promote_predecessor(Nodeptr node, Nodeptr pred) {
+		value_alloc.destroy(&node->value);
+		value_alloc.construct(&node->value, pred->value);
+	}
 	void erase(Nodeptr node) {
 		int kids_count = (node->left != nil) + (node->right != nil);
 		switch (kids_count) {
@@ -362,20 +364,35 @@ private:
 			case 1: update_mom(node, get_promoted_kid(node));
 				return delete node;
 			case 2: Nodeptr pred = predecessor(node);
-				std::swap(node->value, pred->value);
+				promote_predecessor(node, pred);
 				return erase(pred);
 		}
 	}
 
 public:
-// erase data 
-	void erase(const value_type& data) {
-		Nodeptr node = find(data);
-		if (not_nil(node)) erase(node);
+// erase at iterator
+	void erase(iterator pos) {
+	// template <typename Iter>
+	// void erase(tree_iterator <typename enable_if_same<iterator, Iter, Iter>::type>& pos) {
+		erase(pos.base());
 		header->left = leftmost(root);
 		header->mom = rightmost(root);
 		// header->right = header;
+		// tree_size -= tree_size != 0;
 		--tree_size;
+	}
+// erase data 
+	template <typename Key>
+	bool erase(const Key& key) {
+	// bool erase(const typename remove_const<Key>::type& key) {
+		Nodeptr node = find(key).base();
+		if (is_nil(node)) return 0;
+		erase(node);
+		header->left = leftmost(root);
+		header->mom = rightmost(root);
+		// tree_size -= tree_size != 0;
+		--tree_size;
+		return 1;
 	}
 
 // begin, rbegin 

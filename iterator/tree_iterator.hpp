@@ -19,8 +19,8 @@ bool not_nil(Nodeptr node) { return node->is_nil == false; }
 // tree increment 
 template <typename Nodeptr> static
 Nodeptr	tree_increment(Nodeptr node) {
-	if (node->color == red && node->right->mom == node)
-		return node = node->right;
+	// if (node->color == red && node->right->mom == node)
+		// return node = node->right;
 	if (not_nil(node->right)) {
 		node = node->right;
 		while (not_nil(node->left))
@@ -40,8 +40,8 @@ Nodeptr	tree_increment(Nodeptr node) {
 // tree decrement 
 template <typename Nodeptr> static 
 Nodeptr	tree_decrement(Nodeptr node) {
-	if (is_nil(node))
-		return node = node->mom;
+	// if (is_nil(node))
+		// return node = node->mom;
 	if (not_nil(node->left)) {
 		node = node->left;
 		while (not_nil(node->right))

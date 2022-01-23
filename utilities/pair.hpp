@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace ft {
 
@@ -18,12 +18,14 @@ struct pair {
 	pair(const pair<U1, U2>& p):
 		first(p.first), second(p.second) {
 	}
+	~pair() {}
 // = 
 	pair& operator = (const pair& other) {
 		first = other.first;
 		second = other.second;
 		return *this;
 	}
+
 }; // ! struct pair
 
 // make pair 
