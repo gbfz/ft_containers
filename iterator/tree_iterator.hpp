@@ -59,99 +59,93 @@ Nodeptr	tree_decrement(Nodeptr node) {
 }
 
 
-template <typename _node, typename _container>
+template <typename Value>
 class tree_iterator {
-protected:
-// memory accessor 
-	typedef typename _container::pointer		this_iterator;
-	_node						_base;
-
 public:
 // member type definitions 
-	typedef iterator_traits<_node*>			traits;
+	typedef iterator_traits <Value*>		traits;
 	typedef typename traits::value_type		value_type;
 	typedef typename traits::pointer		pointer;
 	typedef typename traits::reference		reference;
 	typedef typename traits::difference_type	difference_type;
 	typedef typename traits::iterator_category	iterator_category;
+private:
+// memory accessor 
+	typedef RBNode<typename ft::remove_const<value_type>
+				  ::type>*		Nodeptr;
+	Nodeptr		node;
 
 // ctors, dtor  
 	// Default constructor 
-	tree_iterator(): _base(_node()) {}
-	// Regular copy constructor 
-	explicit tree_iterator(const _node& other): _base(other) {}
-	// Copy constructor that allows iterator to const_iterator conversion
-	template <typename other>
-	tree_iterator(const tree_iterator
-			<other, typename enable_if_same<this_iterator, other,
-			_container>::type>& source): _base(source.base()) {}
+public:
+	tree_iterator() {}
+	tree_iterator(Nodeptr other):
+		node(static_cast<Nodeptr>(other)) {}
+	tree_iterator(const tree_iterator<const value_type>& other): node(other.base()) {}
+	// tree_iterator(const tree_iterator<typename ft::remove_const<value_type>::type>& other):
+		// node(other.base()) {}
 	~tree_iterator() {}
 
+
 // operator = 
-	template <typename other>
-	tree_iterator operator = (const tree_iterator
-			<other, typename enable_if_same<this_iterator, other,
-			_container>::type>& source) {
-		_base = source.base();
+	template <typename _other>
+	tree_iterator operator = (const tree_iterator<typename ft::remove_const
+			<value_type>::type>& other) {
+		node = other.base();
 		return *this;
 	}
 
 // *, -> 
 	reference operator * () const {
-		return *(_base->value);
+		return node->value;
 	}
-
 	pointer operator -> () const {
-		return _base->value;
+		return &node->value;
 	}
 
 // ++ 
 	tree_iterator& operator ++ () {
-		_base = tree_increment(_base);
+		node = tree_increment(node);
 		return *this;
 	}
-
 	tree_iterator operator ++ (int) {
 		tree_iterator it = *this;
-		++_base;
+		++node;
 		return it;
 	}
 
 // -- 
 	tree_iterator& operator -- () {
-		_base = tree_decrement(_base);
+		node = tree_decrement(node);
 		return *this;
 	}
-
 	tree_iterator operator -- (int) {
 		tree_iterator it = *this;
-		--_base;
+		--node;
 		return it;
 	}
 
 // base 
-	const _node& base() const {
-		return _base;
+	const Nodeptr& base() const {
+		return node;
 	}
 
 };
 
 // iterator comparison 
-template <typename typeL, typename typeR, typename _container>
+template <typename typeL, typename typeR>
 inline bool
 operator ==
-(const tree_iterator<typeL, _container>& lhs,
- const tree_iterator<typeR, _container>& rhs) {
+(const tree_iterator<typeL>& lhs,
+ const tree_iterator<typeR>& rhs) {
 	return lhs.base() == rhs.base();
 }
-
-template <typename typeL, typename typeR, typename _container>
+template <typename typeL, typename typeR>
 inline bool
 operator !=
-(const tree_iterator<typeL, _container>& lhs,
- const tree_iterator<typeR, _container>& rhs) {
+(const tree_iterator<typeL>& lhs,
+ const tree_iterator<typeR>& rhs) {
 	return !(lhs == rhs);
 }
-
 
 } // ! namespace ft

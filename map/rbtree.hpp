@@ -29,8 +29,8 @@ public:
 	typedef typename Value_alloc::
 		template rebind<RBNode<Value> >::other	Node_alloc;
 	typedef	typename Node_alloc::pointer		Nodeptr;
-	typedef tree_iterator<Nodeptr, RBTree>		iterator;
-	typedef tree_iterator<const Nodeptr, RBTree>	const_iterator;
+	typedef tree_iterator<value_type>		iterator;
+	typedef tree_iterator<const value_type>		const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 

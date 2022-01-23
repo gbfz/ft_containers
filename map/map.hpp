@@ -24,19 +24,16 @@ public:
 	typedef const value_type&			const_reference;
 	typedef typename Allocator::pointer		pointer;
 	typedef typename Allocator::const_pointer	const_pointer;
+	typedef tree_iterator<value_type>		iterator;
+	typedef tree_iterator<const value_type>		const_iterator;
 	typedef RBTree<value_type, allocator_type>	RBTree;
-	typedef typename RBTree::iterator		iterator;
-	typedef typename RBTree::const_iterator		const_iterator;
-	/*
-	typedef tree_iterator<value_type, map>		iterator;
-	typedef tree_iterator<const value_type, map>	const_iterator;
+	// typedef typename RBTree::iterator		iterator;
+	// typedef typename RBTree::const_iterator		const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
-	*/
 
 private:
 // underlying red-black tree data structure 
-	// RBTree<value_type, allocator_type>		tree;
 	RBTree tree;
 
 public:
@@ -45,7 +42,9 @@ public:
 	explicit map(const Compare& comp, const Allocator& alloc = Allocator()):
 		tree(comp, alloc) {}
 	template <typename InputIt>
-	map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()): tree(comp, alloc) {
+	map(InputIt first, InputIt last,
+		const Compare& comp = Compare(),
+		const Allocator& alloc = Allocator()): tree(comp, alloc) {
 		for (; first != last; ++first)
 			tree.insert(*first);
 	}
@@ -56,21 +55,17 @@ public:
 		tree.insert(d);
 	}
 
-	void print() {
-		tree.print();
-	}
+// TODO: hide 
+	void print() { tree.print(); }
 
-	iterator begin() {
-		return tree.begin();
-	}
+	iterator begin() { return tree.begin(); }
+	const_iterator begin() const { return tree.begin(); }
 
-	iterator end() {
-		return tree.end();
-	}
+	iterator end() { return tree.end(); }
+	const_iterator end() const { return tree.end(); }
 
-	reference operator * () const { return tree.operator*(); }
-
-	pointer operator -> () const { return tree.operator->(); }
+	reference operator * () const { return tree.operator * (); }
+	pointer   operator ->() const { return tree.operator-> (); }
 };
 
 } // ! namespace ft
