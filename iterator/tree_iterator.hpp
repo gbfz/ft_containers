@@ -21,12 +21,20 @@ template <typename Nodeptr> static
 Nodeptr	tree_increment(Nodeptr node) {
 	// if (node->color == red && node->right->mom == node)
 		// return node = node->right;
+	// if (node->right->color == red && node->right->mom != node)
+		// return node = node->right;
+	// if (is_nil(node->mom) && node->mom->color == red)
+		// return node = node->mom;
+	if (is_nil(node->right) && node->right->color == red)
+		return node = node->right;
 	if (not_nil(node->right)) {
+		// cout << "a\n";
 		node = node->right;
 		while (not_nil(node->left))
 			node = node->left;
 		return node;
 	}
+	// cout << "b\n";
 	Nodeptr ma = node->mom;
 	while (node == ma->right) {
 		node = ma;
@@ -43,11 +51,13 @@ Nodeptr	tree_decrement(Nodeptr node) {
 	// if (is_nil(node))
 		// return node = node->mom;
 	if (not_nil(node->left)) {
+		// cout << "e\n";
 		node = node->left;
 		while (not_nil(node->right))
 			node = node->right;
 		return node;
 	}
+	// cout << "f\n";
 	Nodeptr ma = node->mom;
 	while (node == ma->left) {
 		node = ma;

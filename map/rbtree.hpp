@@ -49,11 +49,14 @@ public:
 // ctors, dtor 
 	RBTree(): value_alloc(Value_alloc()), node_alloc(Node_alloc()),
 		comp(compare_type()),
-		nil(create_nil_node()), header(nil), root(nil), tree_size(0) {
+		nil(create_nil_node()), /*header(nil),*/ root(nil), tree_size(0) {
 			root->color = black;
-			header->mom = root;
-			header->left = root;
-			header->right = root;
+			header = node_alloc.allocate(1);
+			node_alloc.construct(header, RBNode<Value>());
+			header->mom = nil;
+			header->left = header;
+			header->right = header;
+			root->right = header;
 			header->color = red;
 			header->is_nil = true;
 	}
@@ -136,21 +139,8 @@ public:
 	}
 
 // find 
-	/*
-	iterator find(const value_type& value) {
-		if (is_nil(root)) return end();
-		Nodeptr node = root;
-		while (not_nil(node) && value != node->value) {
-			if (value < node->value)
-				node = node->left;
-			else node = node->right;
-		}
-		return iterator(node);
-	}
-	*/
 	template <typename Key>
 	iterator find(const Key& key) {
-		if (is_nil(root)) return end();
 		Nodeptr node = root;
 		while (not_nil(node) && key != node->value.first) {
 			if (key < node->value.first)
@@ -158,6 +148,16 @@ public:
 			else node = node->right;
 		}
 		return iterator(node);
+	}
+	template <typename Key>
+	const_iterator find(const Key& key) const {
+		Nodeptr node = root;
+		while (not_nil(node) && key != node->value.first) {
+			if (key < node->value.first)
+				node = node->left;
+			else node = node->right;
+		}
+		return const_iterator(node);
 	}
 
 // delete node and children 
@@ -177,7 +177,7 @@ public:
 // clear 
 	void clear() {
 		delete_node(root);
-		// root = header;
+		root = header;
 		header->left = root;
 		header->mom = root;
 		tree_size = 0;
@@ -296,9 +296,11 @@ public:
 		Nodeptr node = create_node(data);
 		root = insert(root, node);
 		insert_rebalance(node);
-		header->left = leftmost(root);
-		header->mom = rightmost(root);
-		// header->right = header;
+		// header->left = leftmost(root);
+		// header->mom = rightmost(root);
+		header->left = rightmost(root);
+		header->right = leftmost(root);
+		rightmost(root)->right = header;
 		++tree_size;
 		return ft::make_pair(iterator(node), true);
 	}
@@ -375,9 +377,11 @@ public:
 	// template <typename Iter>
 	// void erase(tree_iterator <typename enable_if_same<iterator, Iter, Iter>::type>& pos) {
 		erase(pos.base());
-		header->left = leftmost(root);
-		header->mom = rightmost(root);
-		// header->right = header;
+		// header->left = leftmost(root);
+		// header->mom = rightmost(root);
+		header->left = rightmost(root);
+		header->right = leftmost(root);
+		rightmost(root)->right = header;
 		// tree_size -= tree_size != 0;
 		--tree_size;
 	}
@@ -388,8 +392,11 @@ public:
 		Nodeptr node = find(key).base();
 		if (is_nil(node)) return 0;
 		erase(node);
-		header->left = leftmost(root);
-		header->mom = rightmost(root);
+		// header->left = leftmost(root);
+		// header->mom = rightmost(root);
+		header->left = rightmost(root);
+		header->right = leftmost(root);
+		rightmost(root)->right = header;
 		// tree_size -= tree_size != 0;
 		--tree_size;
 		return 1;
@@ -397,10 +404,10 @@ public:
 
 // begin, rbegin 
 	iterator begin() {
-		return iterator(header->left);
+		return iterator(header->right);
 	}
 	const_iterator begin() const {
-		return const_iterator(header->left);
+		return const_iterator(header->right);
 	}
 	reverse_iterator rbegin() {
 		return reverse_iterator(end());

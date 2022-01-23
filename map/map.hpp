@@ -53,10 +53,10 @@ public:
 
 // find
 	iterator find(const Key& key) {
-		return iterator(tree.find_key(key));
+		return iterator(tree.find(key));
 	}
 	const_iterator find(const Key& key) const {
-		return const_iterator(tree.find_key(key));
+		return const_iterator(tree.find(key));
 	}
 
 // insert 
@@ -76,6 +76,14 @@ public:
 	size_type erase(const Key& key) {
 		return tree.erase(key);
 	}
+
+// count 
+	size_type count(const Key& key) const {
+		return tree.find(key) != tree.end();
+	}
+
+// clear 
+	void clear() { tree.clear(); }
 
 // TODO: hide 
 	void print() { tree.print(); }
