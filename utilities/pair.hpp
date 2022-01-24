@@ -1,23 +1,25 @@
 #pragma once
+#include "ft_type_traits.hpp"
 
 namespace ft {
 
 template <class T1, class T2>
 struct pair {
 // member fields 
+	// typedef typename ft::remove_const<__T1>::type T1;
+	// typedef typename ft::remove_const<__T2>::type T2;
 	T1 first;
 	T2 second;
 // constructors 
-	pair(): // {
-		first(T1()), second(T2()) {
-	}
-	pair(const T1& _f, const T2& _s):
-		first(_f), second(_s) {
-	}
+	pair():
+		first(T1()), second(T2()) {}
+
+	pair(T1& _f, T2& _s):
+		first(_f), second(_s) {}
+
 	template <class U1, class U2>
 	pair(const pair<U1, U2>& p):
-		first(p.first), second(p.second) {
-	}
+		first(p.first), second(p.second) {}
 	~pair() {}
 // = 
 	pair& operator = (const pair& other) {
@@ -30,8 +32,7 @@ struct pair {
 
 // make pair 
 template <class T1, class T2>
-ft::pair<T1, T2>
-make_pair(T1 t, T2 u) {
+ft::pair<T1, T2> make_pair(T1 t, T2 u) {
 	return pair<T1, T2>(t, u);
 }
 

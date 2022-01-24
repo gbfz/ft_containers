@@ -9,8 +9,7 @@
 
 namespace ft {
 
-template <class Key,
-	 class T,
+template<class Key, class T,
 	 class Compare = std::less<Key>,
 	 class Allocator = std::allocator<ft::pair<const Key, T> > >
 class map {
@@ -37,6 +36,9 @@ private:
 	RBTree<value_type, allocator_type> tree;
 
 public:
+// TODO: hide 
+	void print() { tree.print(); }
+
 // ctors, dtor 
 	map(): tree() {}
 	explicit map(const Compare& comp, const Allocator& alloc = Allocator()):
@@ -61,20 +63,39 @@ public:
 
 // insert 
 	ft::pair<iterator, bool> insert(const value_type& d) {
+		iterator f = find(d.first);
+		if (f != end())
+			return ft::make_pair(f, false);
 		return tree.insert(d);
 	}
 	template <typename InputIt>
 	void insert(InputIt first, InputIt last) {
-		for (; first != last; ++first)
-			tree.insert(*first);
+		tree.insert(first, last);
 	}
 
 // erase 
-	void erase(iterator pos) {
-		return tree.erase(pos);
-	}
 	size_type erase(const Key& key) {
 		return tree.erase(key);
+	}
+	void erase(iterator pos) {
+		tree.erase(pos);
+	}
+	template <typename InputIt>
+	void erase(InputIt first, InputIt last) {
+		tree.erase(first, last);
+	}
+
+// [] 
+	T& operator [] (const Key& key) {
+		return insert(ft::make_pair(key, T())).first->second;
+	}
+
+// at 
+	T& at(const Key& key) {
+		iterator f = find(key);
+		if (f == end())
+			throw std::out_of_range("no map element at given key");
+		return f->second;
 	}
 
 // count 
@@ -85,17 +106,29 @@ public:
 // clear 
 	void clear() { tree.clear(); }
 
-// TODO: hide 
-	void print() { tree.print(); }
+// lower bound 
+	iterator lower_bound(const Key& key) { return tree.lower_bound(key); }
+	const_iterator lower_bound(const Key& key) const { return tree.lower_bound(key); }
 
+// upper bound
+	iterator upper_bound(const Key& key) { return tree.upper_bound(key); }
+	const_iterator upper_bound(const Key& key) const { return tree.upper_bound(key); }
+
+// equal range 
+	iterator equal_range(const Key& key) { return tree.equal_range(key); }
+	const_iterator equal_range(const Key& key) const { return tree.equal_range(key); }
+
+// begin, rbegin 
 	iterator begin() { return tree.begin(); }
 	const_iterator begin() const { return tree.begin(); }
 
+// end, rend 
 	iterator end() { return tree.end(); }
 	const_iterator end() const { return tree.end(); }
 
-	reference operator * () const { return tree.operator * (); }
-	pointer   operator ->() const { return tree.operator-> (); }
+// size 
+	size_type size() const { return tree.size(); }
+
 };
 
 } // ! namespace ft

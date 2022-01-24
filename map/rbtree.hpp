@@ -1,13 +1,11 @@
-#include <iostream>
 #include "rbnode.hpp"
-// TODO: delete 
-using namespace std; // TODO: delete !!!
-#include <unistd.h>
-#include <map>
+#include <functional>
+#include <memory>
 // TODO: normal includes 
 #include "../iterator/tree_iterator.hpp"
-#include "../iterator/iterator.hpp"
+#include "../iterator/reverse_iterator.hpp"
 #include "../utilities/pair.hpp"
+#include <iostream> // TODO: delete 
 
 namespace ft {
 
@@ -75,7 +73,8 @@ public:
 		if (is_red(node)) std::cout << RED;
 		else std::cout << BLK;
 		std::cout << std::string(offset, '-');
-		std::cout << ' ' << node->value.first << ", " << node->value.second << endl;
+		// std::cout << ' ' << node->value.first << ", " << node->value.second << endl;
+		std::cout << ' ' << node->value.first << std::endl;
 		std::cout << RESET;
 		print(node->left, offset + 4);
 	}
@@ -105,10 +104,6 @@ private:
 		return node;
 	}
 
-// is nil 
-	bool is_nil(Nodeptr node) const { return node->is_nil == true; }
-	bool not_nil(Nodeptr node) const { return node->is_nil == false; }
-
 // children 
 	bool is_left_child (Nodeptr node) { return node == node->mom->left; }
 	bool is_right_child(Nodeptr node) { return node == node->mom->right; }
@@ -120,7 +115,37 @@ private:
 		else node->color = red;
 	}
 
+// maintain header pointers 
+	void maintain_header() {
+		header->left = rightmost(root);
+		header->left->right = header;
+		header->right = leftmost(root);
+	}
+
+// transplant value
+	void transplant_value(Nodeptr where, Nodeptr what) {
+		value_alloc.destroy(&where->value);
+		value_alloc.construct(&where->value, what->value);
+	}
+
 public:
+// successor 
+	Nodeptr successor(Nodeptr node) {
+		if (is_nil(node)) return nil;
+		if (not_nil(node->right)) {
+			node = node->right;
+			while (node->left != nil)
+				node = node->left;
+			return node;
+		}
+		Nodeptr ma = node->mom;
+		while (node == ma->right)
+			node = ma, ma = ma->mom;
+		if (node->right != ma)
+			node = ma;
+		return node;
+	}
+
 // predecessor 
 	Nodeptr predecessor(Nodeptr node) {
 		if (is_nil(node)) return nil;
@@ -147,6 +172,7 @@ public:
 				node = node->left;
 			else node = node->right;
 		}
+		if (node == nil) return end();
 		return iterator(node);
 	}
 	template <typename Key>
@@ -157,7 +183,63 @@ public:
 				node = node->left;
 			else node = node->right;
 		}
+		if (node == nil) return end();
 		return const_iterator(node);
+	}
+
+public:
+// lower bound 
+	template <typename Key>
+	iterator lower_bound(const Key& key) {
+		if (key < header->right->value.first)
+			return begin();
+		if (key > header->left->value.first)
+			return end();
+		Nodeptr node = root;
+		while (key <= node->left->value.first)
+			node = node->left;
+		while (key > node->value.first)
+			node = node->right;
+		return iterator(node);
+	}
+	template <typename Key>
+	const_iterator lower_bound(const Key& key) const {
+		if (key < header->right->value.first)
+			return begin();
+		if (key > header->left->value.first)
+			return end();
+		Nodeptr node = root;
+		while (key <= node->left->value.first)
+			node = node->left;
+		while (key > node->value.first)
+			node = node->right;
+		return const_iterator(node);
+	}
+
+// upper bound 
+	template <typename Key>
+	iterator upper_bound(const Key& key) {
+		iterator lb = lower_bound(key);
+		if (key == lb->first)
+			return ++lb;
+		return lb;
+	}
+	template <typename Key>
+	const_iterator upper_bound(const Key& key) const {
+		iterator lb = lower_bound(key);
+		if (key == lb->first)
+			return ++lb;
+		return lb;
+	}
+
+// equal range 
+	template <typename Key>
+	ft::pair<iterator, iterator> equal_range(const Key& key) {
+		return ft::make_pair(lower_bound(key), upper_bound(key));
+	}
+	template <typename Key>
+	ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const {
+		return ft::make_pair(lower_bound(key), upper_bound(key));
 	}
 
 // delete node and children 
@@ -214,6 +296,7 @@ private:
 		if (not_nil(newNode)) newNode->mom = node->mom;
 	}
 
+// rotate 
 // rotate left 
 	void rotate_left(Nodeptr node) {
 		Nodeptr origRight = node->right;
@@ -245,6 +328,7 @@ private:
 		else rotate_left(y);
 	}
 
+// insert 
 // insert rebalance 
 	void insert_rebalance(Nodeptr node) {
 		Nodeptr ma = node->mom;
@@ -252,7 +336,7 @@ private:
 			Nodeptr grandma = ma->mom;
 			Nodeptr aunt = is_left_child(ma) ?
 					  grandma->right : grandma->left;
-			if (not_nil(aunt) && is_red(aunt)) {
+			if (is_red(aunt)) {
 				flip_color(ma), flip_color(aunt), flip_color(grandma);
 				insert_rebalance(grandma);
 			}
@@ -261,8 +345,7 @@ private:
 					rotate_left(node = node->mom);
 				flip_color(node->mom), flip_color(node->mom->mom);
 				rotate_right(node->mom->mom);
-			}
-			else if (is_right_child(ma)) {
+			} else {
 				if (is_left_child(node))
 					rotate_right(node = node->mom);
 				flip_color(node->mom), flip_color(node->mom->mom);
@@ -274,9 +357,9 @@ private:
 
 // insert node 
 	Nodeptr insert(Nodeptr where, Nodeptr node) {
+		// TODO: comp
 		if (is_nil(where)) return node;
 		if (node->value < where->value) {
-		// if (comp(node->value, where->value)) {
 			where->left = insert(where->left, node);
 			where->left->mom = where;
 		}
@@ -290,21 +373,20 @@ private:
 public:
 // insert data 
 	ft::pair<iterator, bool> insert(const value_type& data) {
-		iterator f = find(data.first);
-		if (not_nil(f.base()))
-			return ft::make_pair(f, false);
 		Nodeptr node = create_node(data);
 		root = insert(root, node);
 		insert_rebalance(node);
-		// header->left = leftmost(root);
-		// header->mom = rightmost(root);
-		header->left = rightmost(root);
-		header->right = leftmost(root);
-		rightmost(root)->right = header;
+		maintain_header();
 		++tree_size;
 		return ft::make_pair(iterator(node), true);
 	}
+	template <typename InputIt>
+	void insert(InputIt first, InputIt last) {
+		while (first != last)
+			insert(*first++);
+	}
 
+// erase 
 private:
 // get promoted kid 
 	Nodeptr get_promoted_kid(Nodeptr node) {
@@ -314,14 +396,10 @@ private:
 	}
 
 // get niece for rebalance case 2 
-	Nodeptr get_best_red_niece(Nodeptr node, Nodeptr sis) {
-		if (is_black(sis->left) && is_red(sis->right))
-			return sis->right;
-		if (is_black(sis->right) && is_red(sis->left))
-			return sis->left;
-		if (is_left_child(node))
-			return sis->right;
-		return sis->left;
+	Nodeptr get_niece(Nodeptr node, Nodeptr sis) {
+		if (sis->left->color != sis->right->color)
+			return is_red(sis->right) ? sis->right : sis->left;
+		return is_left_child(node) ? sis->right : sis->left;
 	}
 
 // erase rebalance 
@@ -329,23 +407,22 @@ private:
 		if (node == root) return;
 		Nodeptr ma = node->mom,
 			sis = is_left_child(node) ? ma->right : ma->left,
-			niece = get_best_red_niece(node, sis);
+			niece = get_niece(node, sis);
 		if (is_red(sis)) {						// case 1
 			rotate_x_around_y(sis, ma);
 			sis->color = black, ma->color = red;
 			return erase_rebalance(node);
 		}
 		if (is_red(niece)) {						// case 2
-			if (is_right_child(node) && is_right_child(niece))
+			if (is_left_child(node) && is_left_child(niece))
+				rotate_right(sis); 
+			else if (is_right_child(node) && is_right_child(niece))
 				rotate_left(sis);
-			else if (is_left_child(node) && is_left_child(niece))
-				rotate_right(sis);
 			color_t old_ma_color = ma->color;
 			rotate_x_around_y(sis, ma);
 			niece->color = ma->color = black;
 			sis->color = old_ma_color;
-		}
-		else {								// case 3
+		} else {							// case 3
 			node->color = black, sis->color = red;
 			if (ma->color == red) ma->color = black;
 			else if (ma != root) erase_rebalance(ma);
@@ -353,12 +430,8 @@ private:
 	}
 
 // erase node 
-	void promote_predecessor(Nodeptr node, Nodeptr pred) {
-		value_alloc.destroy(&node->value);
-		value_alloc.construct(&node->value, pred->value);
-	}
 	void erase(Nodeptr node) {
-		int kids_count = (node->left != nil) + (node->right != nil);
+		int kids_count = not_nil(node->left) + not_nil(node->right);
 		switch (kids_count) {
 			case 0: if (is_black(node)) erase_rebalance(node);
 				update_mom(node, nil);
@@ -366,38 +439,37 @@ private:
 			case 1: update_mom(node, get_promoted_kid(node));
 				return delete node;
 			case 2: Nodeptr pred = predecessor(node);
-				promote_predecessor(node, pred);
+				transplant_value(node, pred);
 				return erase(pred);
 		}
 	}
 
 public:
-// erase at iterator
+// erase at pos 
 	void erase(iterator pos) {
 	// template <typename Iter>
 	// void erase(tree_iterator <typename enable_if_same<iterator, Iter, Iter>::type>& pos) {
 		erase(pos.base());
-		// header->left = leftmost(root);
-		// header->mom = rightmost(root);
-		header->left = rightmost(root);
-		header->right = leftmost(root);
-		rightmost(root)->right = header;
-		// tree_size -= tree_size != 0;
+		maintain_header();
 		--tree_size;
 	}
+
+// erase iterator range 
+	template <typename InputIt>
+	void erase(InputIt first, InputIt last) {
+		while (first != last)
+			erase(first++);
+	}
+
 // erase data 
 	template <typename Key>
 	bool erase(const Key& key) {
 	// bool erase(const typename remove_const<Key>::type& key) {
 		Nodeptr node = find(key).base();
-		if (is_nil(node)) return 0;
+		if (is_nil(node))
+			return 0;
 		erase(node);
-		// header->left = leftmost(root);
-		// header->mom = rightmost(root);
-		header->left = rightmost(root);
-		header->right = leftmost(root);
-		rightmost(root)->right = header;
-		// tree_size -= tree_size != 0;
+		maintain_header();
 		--tree_size;
 		return 1;
 	}
@@ -430,6 +502,9 @@ public:
 		return const_reverse_iterator(begin());
 	}
 
+// size 
+	size_t size() const { return tree_size; }
+
 }; // ! rbtree 
 
-} // ! namespace ft 
+} // ! namespace ft

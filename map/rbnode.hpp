@@ -8,7 +8,6 @@ typedef bool	color_t;
 #define red	false
 #define black	true
 
-// Node definition 
 template <typename T>
 struct RBNode {
 // data fields 
@@ -19,16 +18,12 @@ struct RBNode {
 	RBNode*		right;
 	bool		is_nil; // sorry 
 
-// unnecessary ctors, dtor 
+// ctors, dtor 
 	RBNode():
 		color(black), mom(0), left(0), right(0) {}
 	RBNode(const T& v):
 		value(v), color(red), mom(0), left(0), right(0) {}
 	explicit RBNode(const RBNode& other):
-		value(other.value), color(other.color),
-		mom(other.mom), left(other.left), right(other.right) {}
-	template <typename O> // do i need this ???
-	RBNode(const RBNode<typename enable_if_same<T, O, T>::type>& other):
 		value(other.value), color(other.color),
 		mom(other.mom), left(other.left), right(other.right) {}
 	~RBNode() {}
@@ -42,42 +37,17 @@ struct RBNode {
 		right = other.right;
 		return *this;
 	}
-	RBNode* operator = (const RBNode*& other) {
-		value = other->value;
-		color = other->color;
-		mom = other->mom;
-		left = other->left;
-		right = other->right;
-		return this;
-	}
-// swap 
-	void swap(RBNode* b) {
-		T t = b->value;
-		b->value = value;
-		value = t;
-	}
+
+// nil check 
+	template <typename U> friend bool is_nil(RBNode* node);
+	template <typename U> friend bool not_nil(RBNode* node);
+
 };
 
-// node comparison 
+// nil check definition 
 template <typename T>
-inline bool
-operator == (const RBNode<T>* lhs, const RBNode<T>* rhs) {
-	return lhs->value == rhs->value &&
-		lhs->color == rhs->color &&
-		lhs->mom == rhs->mom &&
-		lhs->left == rhs->left &&
-		lhs->right == rhs->right;
-}
+bool is_nil(RBNode<T>* node) { return node->is_nil == true; }
 template <typename T>
-inline bool
-operator != (const RBNode<T>* lhs, const RBNode<T>* rhs) {
-	return !(lhs == rhs);
-}
-
-// swap 
-template <typename T>
-inline void swap(RBNode<T>* lhs, RBNode<T>* rhs) {
-	lhs->swap(rhs);
-}
+bool not_nil(RBNode<T>* node) { return node->is_nil == false; }
 
 } // ! namespace ft
