@@ -1,8 +1,10 @@
 #pragma  once
 #include <memory>
 #include <algorithm>
-#include "iterator.hpp"
-#include "comparison.hpp"
+// #include "iterator.hpp"
+#include "../iterator/iterator.hpp" // TODO: delete 
+// #include "comparison.hpp"
+#include "../utilities/comparison.hpp" // TODO: delete 
 #include <stdexcept>
 
 namespace ft {
@@ -37,7 +39,8 @@ protected:
 // memory methods 
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
-		if (_capacity > 0)
+		// if (_capacity > 0)
+		if (_mem) _alloc.destroy(_mem);
 			_alloc.deallocate(_mem, _capacity);
 		_mem = new_mem;
 		_capacity = new_cap;
@@ -69,43 +72,53 @@ public:
 	vector(const vector& other): // {
 		_alloc(other.get_allocator()),
 		_size(other._size), _capacity(other._capacity) {
-		_mem = _alloc.allocate(_capacity);
-		construct(begin(), end(), value_type());
-		std::copy(other.begin(), other.end(), _mem);
+		if (_capacity) {
+			_mem = _alloc.allocate(_capacity);
+			construct(begin(), end(), value_type());
+			std::copy(other.begin(), other.end(), _mem);
+		} else _mem = 0;
 	}
 	explicit vector(const Alloc& alloc): // {
 		_alloc(alloc), _mem(0), _size(0), _capacity(0) {
 	}
-	explicit vector(size_type count,
-			const_reference value = value_type(),
-			const Alloc& alloc = Alloc()): // {
+	explicit vector(size_type count, const_reference value = value_type(),
+				const Alloc& alloc = Alloc()):
 		_alloc(alloc), _size(count), _capacity(count) {
-		_mem = _alloc.allocate(_capacity);
-		construct(iterator(_mem), iterator(_mem + _size),
-			value);
+		if (_capacity) {
+			_mem = _alloc.allocate(_capacity);
+			construct(iterator(_mem), iterator(_mem + _size), value);
+		} else _mem = 0;
 	}
 	template <class InputIt>
 	vector(InputIt first, InputIt last,
 			const Alloc& alloc = Alloc()): _alloc(alloc) {
-		// TODO: what if distance is 0?
 		difference_type distance = std::abs(std::distance(first, last));
-		_mem = _alloc.allocate(distance);
-		_size = _capacity = distance;
-		construct(iterator(_mem), iterator(_mem + _size),
-				value_type());
-		if (first < last) std::copy(first, last, _mem);
-		else std::reverse_copy(first, last, _mem);
+		if (distance) {
+			_mem = _alloc.allocate(distance);
+			_size = _capacity = distance;
+			construct(iterator(_mem), iterator(_mem + _size), value_type());
+			if (first < last)
+				std::copy(first, last, _mem);
+			else std::reverse_copy(first, last, _mem);
+		} else {
+			_mem = NULL;
+			_capacity = _size = 0;
+		}
 	}
 	~vector() {
-		if (_capacity) _alloc.deallocate(_mem, _capacity);
+		if (_mem) _alloc.destroy(_mem);
+		_alloc.deallocate(_mem, _capacity);
+		_mem = NULL;
 	}
 
 // = 
 	vector&	operator = (const vector& other) {
 		if (this == &other) return *this;
-		pointer new_mem = other.get_allocator().allocate(other.capacity());
-		std::copy(other.begin(), other.end(), new_mem);
-		update_mem(new_mem, other.capacity(), other.size());
+		if (!other.empty()) {
+			pointer new_mem = other.get_allocator().allocate(other.capacity());
+			std::copy(other.begin(), other.end(), new_mem);
+			update_mem(new_mem, other.capacity(), other.size());
+		} else clear();
 		return *this;
 	}
 
@@ -277,14 +290,15 @@ public:
 	void push_back(const_reference value) {
 		if (_size == _capacity)
 			reserve(_capacity * 2 + !_capacity);
-			//reserve((_capacity | !_capacity) << !!_capacity);
-		*(_mem + _size) = value;
+			// reserve((_capacity | !_capacity) << !!_capacity);
+		_mem[_size] = value;
 		_size += 1;
 	}
 
 // pop_back 
 	void pop_back() {
-		if (!empty())
+		// if (!empty())
+		if (_size > 0)
 			destroy(end() - 1); // what...
 		_size -= 1;
 	}
@@ -298,8 +312,8 @@ public:
 	}
 
 // accessors 
-	reference	front() const { return *_mem; }
-	reference	back() const { return *(_mem + _size - !empty()); }
+	reference	front() const { return _mem[0]; }
+	reference	back() const { return _mem[_size - !empty()]; }
 	size_type	size() const { return _size; }
 	bool		empty() const { return begin() == end(); }
 	size_type	capacity() const { return _capacity; }

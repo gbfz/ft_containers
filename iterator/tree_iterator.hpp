@@ -25,11 +25,12 @@ private:
 public:
 // ctors, dtor 
 	tree_iterator() {}
-	tree_iterator(Nodeptr other):
-		node(static_cast<Nodeptr>(other)) {} // TODO: static cast ???
-	tree_iterator(const tree_iterator<const value_type>& other): node(other.base()) {}
-	// tree_iterator(const tree_iterator<typename ft::remove_const<value_type>::type>& other):
-		// node(other.base()) {}
+	tree_iterator(Nodeptr other): node(other) {}
+	tree_iterator(const tree_iterator
+			<const value_type>& other): node(other.base()) {}
+	tree_iterator(const tree_iterator
+			<typename ft::remove_const<value_type>::type>& other):
+		node(other.base()) {}
 	~tree_iterator() {}
 
 // operator = 
@@ -49,7 +50,7 @@ public:
 	}
 
 // ++ 
-private:
+// private:
 	static Nodeptr tree_increment(Nodeptr node) {
 		if (is_nil(node->right) && node->right->color == red)
 			return node = node->right;
@@ -68,7 +69,7 @@ private:
 			node = ma;
 		return node;
 	}
-public:
+// public:
 	tree_iterator& operator ++ () {
 		node = tree_increment(node);
 		return *this;
@@ -80,7 +81,7 @@ public:
 	}
 
 // -- 
-private:
+// private:
 	static Nodeptr tree_decrement(Nodeptr node) {
 	if (not_nil(node->left)) {
 		node = node->left;
@@ -97,7 +98,7 @@ private:
 		node = ma;
 	return node;
 }
-public:
+// public:
 	tree_iterator& operator -- () {
 		node = tree_decrement(node);
 		return *this;

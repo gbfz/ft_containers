@@ -20,14 +20,10 @@ public:
 // type definitions 
 	typedef Value					value_type;
 	typedef Allocator				Value_alloc;
-	typedef Compare					compare_type;
-	// typedef typename Value_alloc::reference 	reference;
-	// typedef typename Value_alloc::const_reference	const_reference;
-	typedef typename Value_alloc::pointer		pointer;
-	typedef typename Value_alloc::const_pointer	const_pointer;
 	typedef typename Value_alloc::
 		template rebind<RBNode<Value> >::other	Node_alloc;
 	typedef	typename Node_alloc::pointer		Nodeptr;
+	typedef Compare					compare_type;
 	typedef tree_iterator<value_type>		iterator;
 	typedef tree_iterator<const value_type>		const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
@@ -45,25 +41,37 @@ private:
 
 public:
 // ctors, dtor 
-	RBTree(): value_alloc(Value_alloc()), node_alloc(Node_alloc()),
+	RBTree(): // {
+		value_alloc(Value_alloc()), node_alloc(Node_alloc()),
 		comp(compare_type()),
-		nil(create_nil_node()), /*header(nil),*/ root(nil), tree_size(0) {
-			root->color = black;
-			header = node_alloc.allocate(1);
-			node_alloc.construct(header, RBNode<Value>());
+		nil(create_nil_node()), root(nil), tree_size(0) {
+			header = create_nil_node();
 			header->mom = nil;
 			header->left = header;
 			header->right = header;
-			root->right = header;
 			header->color = red;
-			header->is_nil = true;
+			root->color = black;
+			root->right = header;
 	}
-	explicit RBTree(const RBTree& other): value_alloc(other.value_alloc), node_alloc(other.node_alloc), comp(other.comp),
-		nil(other.nil), header(other.header), root(other.root), tree_size(other.tree_size) {}
+	explicit RBTree(const RBTree& other): // {
+		value_alloc(other.value_alloc), node_alloc(other.node_alloc), comp(other.comp),
+		nil(other.nil), header(other.header), root(other.root), tree_size(other.tree_size) {
+	}
 	~RBTree() {
 		clear();
 		if (header != nil) delete header;
 		delete nil;
+	}
+
+// operator = 
+	RBTree operator = (const RBTree& other) {
+		value_alloc = other.value_alloc;
+		node_alloc = other.node_alloc;
+		comp = other.comp;
+		nil = other.nil;
+		header = other.header;
+		root = other.root;
+		tree_size = other.tree_size;
 	}
 
 // print 
@@ -104,65 +112,7 @@ private:
 		return node;
 	}
 
-// children 
-	bool is_left_child (Nodeptr node) { return node == node->mom->left; }
-	bool is_right_child(Nodeptr node) { return node == node->mom->right; }
-
-// flip color 
-	void flip_color(Nodeptr node) {
-		if (node->color == red)
-			node->color = black;
-		else node->color = red;
-	}
-
-// maintain header pointers 
-	void maintain_header() {
-		header->left = rightmost(root);
-		header->left->right = header;
-		header->right = leftmost(root);
-	}
-
-// transplant value
-	void transplant_value(Nodeptr where, Nodeptr what) {
-		value_alloc.destroy(&where->value);
-		value_alloc.construct(&where->value, what->value);
-	}
-
 public:
-// successor 
-	Nodeptr successor(Nodeptr node) {
-		if (is_nil(node)) return nil;
-		if (not_nil(node->right)) {
-			node = node->right;
-			while (node->left != nil)
-				node = node->left;
-			return node;
-		}
-		Nodeptr ma = node->mom;
-		while (node == ma->right)
-			node = ma, ma = ma->mom;
-		if (node->right != ma)
-			node = ma;
-		return node;
-	}
-
-// predecessor 
-	Nodeptr predecessor(Nodeptr node) {
-		if (is_nil(node)) return nil;
-		if (not_nil(node->left)) {
-			node = node->left;
-			while (node->right != nil)
-				node = node->right;
-			return node;
-		}
-		Nodeptr ma = node->mom;
-		while (node == ma->left)
-			node = ma, ma = ma->mom;
-		if (node->left != ma)
-			node = ma;
-		return node;
-	}
-
 // find 
 	template <typename Key>
 	iterator find(const Key& key) {
@@ -187,7 +137,6 @@ public:
 		return const_iterator(node);
 	}
 
-public:
 // lower bound 
 	template <typename Key>
 	iterator lower_bound(const Key& key) {
@@ -286,6 +235,30 @@ private:
 	bool is_black(const Nodeptr node) const { return node->color == black || is_nil(node); }
 	bool is_red(const Nodeptr node) const { return node->color == red && node != header; }
 
+// is left or is right child 
+	bool is_left_child (Nodeptr node) { return node == node->mom->left; }
+	bool is_right_child(Nodeptr node) { return node == node->mom->right; }
+
+// flip color 
+	void flip_color(Nodeptr node) {
+		if (node->color == red)
+			node->color = black;
+		else node->color = red;
+	}
+
+// maintain header pointers 
+	void maintain_header() {
+		header->left = rightmost(root);
+		header->left->right = header;
+		header->right = leftmost(root);
+	}
+
+// transplant value 
+	void transplant_value(Nodeptr where, Nodeptr what) {
+		value_alloc.destroy(&where->value);
+		value_alloc.construct(&where->value, what->value);
+	}
+
 // update mom 
 	void update_mom(Nodeptr node, Nodeptr newNode) {
 		if (node == root)
@@ -328,7 +301,26 @@ private:
 		else rotate_left(y);
 	}
 
+public:
 // insert 
+// insert data 
+	ft::pair<iterator, bool> insert(const value_type& data) {
+		Nodeptr node = create_node(data);
+		root = insert(root, node);
+		insert_rebalance(node);
+		maintain_header();
+		++tree_size;
+		return ft::make_pair(iterator(node), true);
+	}
+
+// insert from iterator range 
+	template <typename InputIt>
+	void insert(InputIt first, InputIt last) {
+		while (first != last)
+			insert(*first++);
+	}
+
+private:
 // insert rebalance 
 	void insert_rebalance(Nodeptr node) {
 		Nodeptr ma = node->mom;
@@ -371,22 +363,36 @@ private:
 	}
 
 public:
-// insert data 
-	ft::pair<iterator, bool> insert(const value_type& data) {
-		Nodeptr node = create_node(data);
-		root = insert(root, node);
-		insert_rebalance(node);
+// erase 
+// erase at pos 
+	void erase(iterator pos) {
+	// template <typename Iter>
+	// void erase(tree_iterator <typename enable_if_same<iterator, Iter, Iter>::type>& pos) {
+		erase(pos.base());
 		maintain_header();
-		++tree_size;
-		return ft::make_pair(iterator(node), true);
-	}
-	template <typename InputIt>
-	void insert(InputIt first, InputIt last) {
-		while (first != last)
-			insert(*first++);
+		--tree_size;
 	}
 
-// erase 
+// erase iterator range 
+	template <typename InputIt>
+	void erase(InputIt first, InputIt last) {
+		while (first != last)
+			erase(first++);
+	}
+
+// erase data 
+	template <typename Key>
+	bool erase(const Key& key) {
+	// bool erase(const typename remove_const<Key>::type& key) {
+		Nodeptr node = find(key).base();
+		if (is_nil(node))
+			return 0;
+		erase(node);
+		maintain_header();
+		--tree_size;
+		return 1;
+	}
+
 private:
 // get promoted kid 
 	Nodeptr get_promoted_kid(Nodeptr node) {
@@ -418,10 +424,10 @@ private:
 				rotate_right(sis); 
 			else if (is_right_child(node) && is_right_child(niece))
 				rotate_left(sis);
-			color_t old_ma_color = ma->color;
+			color_t ma_color = ma->color;
 			rotate_x_around_y(sis, ma);
 			niece->color = ma->color = black;
-			sis->color = old_ma_color;
+			sis->color = ma_color;
 		} else {							// case 3
 			node->color = black, sis->color = red;
 			if (ma->color == red) ma->color = black;
@@ -438,42 +444,13 @@ private:
 				return delete node;
 			case 1: update_mom(node, get_promoted_kid(node));
 				return delete node;
-			case 2: Nodeptr pred = predecessor(node);
+			case 2: Nodeptr pred = iterator::tree_decrement(node);
 				transplant_value(node, pred);
 				return erase(pred);
 		}
 	}
 
 public:
-// erase at pos 
-	void erase(iterator pos) {
-	// template <typename Iter>
-	// void erase(tree_iterator <typename enable_if_same<iterator, Iter, Iter>::type>& pos) {
-		erase(pos.base());
-		maintain_header();
-		--tree_size;
-	}
-
-// erase iterator range 
-	template <typename InputIt>
-	void erase(InputIt first, InputIt last) {
-		while (first != last)
-			erase(first++);
-	}
-
-// erase data 
-	template <typename Key>
-	bool erase(const Key& key) {
-	// bool erase(const typename remove_const<Key>::type& key) {
-		Nodeptr node = find(key).base();
-		if (is_nil(node))
-			return 0;
-		erase(node);
-		maintain_header();
-		--tree_size;
-		return 1;
-	}
-
 // begin, rbegin 
 	iterator begin() {
 		return iterator(header->right);
@@ -505,6 +482,24 @@ public:
 // size 
 	size_t size() const { return tree_size; }
 
+// swap 
+	void swap(RBTree& other) {
+		std::swap(nil, other.nil);
+		std::swap(header, other.header);
+		std::swap(root, other.root);
+		std::swap(tree_size, other.tree_size);
+		std::swap(node_alloc, other.node_alloc);
+		std::swap(value_alloc, other.value_alloc);
+		std::swap(comp, other.comp);
+	}
+
 }; // ! rbtree 
+
+// swap 
+template <typename V, typename C, typename A>
+void swap(RBTree<V, C, A>& lhs, RBTree<V, C, A>& rhs) {
+	lhs.swap(rhs);
+}
+
 
 } // ! namespace ft

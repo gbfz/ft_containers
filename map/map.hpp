@@ -5,7 +5,7 @@
 // TODO: normal includes
 #include "rbtree.hpp"
 #include "../utilities/pair.hpp"
-// #include "../utilities/comparison.hpp"
+#include "../utilities/comparison.hpp"
 
 namespace ft {
 
@@ -53,7 +53,7 @@ public:
 	map(const map& other): tree(other.tree) {}
 	~map() {}
 
-// find
+// find 
 	iterator find(const Key& key) {
 		return iterator(tree.find(key));
 	}
@@ -129,6 +129,50 @@ public:
 // size 
 	size_type size() const { return tree.size(); }
 
+// swap 
+	void swap(map& other) {
+		tree.swap(other.tree);
+	}
+
 };
+
+// map comparison 
+template <class Key, class T, class Compare, class Alloc>
+bool operator == (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	if (lhs.size() != rhs.size()) return false;
+	return ft::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+template <class Key, class T, class Compare, class Alloc>
+bool operator != (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	return !(lhs == rhs);
+}
+template <class Key, class T, class Compare, class Alloc>
+bool operator < (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+template <class Key, class T, class Compare, class Alloc>
+bool operator > (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	return rhs < lhs;
+}
+template <class Key, class T, class Compare, class Alloc>
+bool operator <= (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	return !(rhs < lhs);
+}
+template <class Key, class T, class Compare, class Alloc>
+bool operator >= (const ft::map<Key, T, Compare, Alloc>& lhs,
+		  const ft::map<Key, T, Compare, Alloc>& rhs) {
+	return !(lhs < rhs);
+}
+
+// swap 
+template <class Key, class T, class Compare, class Alloc>
+void swap(map<Key, T, Compare, Alloc>& lhs, map<Key, T, Compare, Alloc>& rhs) {
+	lhs.swap(rhs);
+}
 
 } // ! namespace ft
