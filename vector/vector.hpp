@@ -67,7 +67,7 @@ protected:
 public:
 // constructors, destructor 
 	vector(): // {
-		_alloc(allocator_type()), _mem(0), _size(0), _capacity(0) {
+		_alloc(allocator_type()), _mem(NULL), _size(0), _capacity(0) {
 	}
 	vector(const vector& other): // {
 		_alloc(other.get_allocator()),
@@ -76,10 +76,10 @@ public:
 			_mem = _alloc.allocate(_capacity);
 			construct(begin(), end(), value_type());
 			std::copy(other.begin(), other.end(), _mem);
-		} else _mem = 0;
+		} else _mem = NULL;
 	}
 	explicit vector(const Alloc& alloc): // {
-		_alloc(alloc), _mem(0), _size(0), _capacity(0) {
+		_alloc(alloc), _mem(NULL), _size(0), _capacity(0) {
 	}
 	explicit vector(size_type count, const_reference value = value_type(),
 				const Alloc& alloc = Alloc()):
@@ -107,7 +107,7 @@ public:
 	}
 	~vector() {
 		if (_mem) _alloc.destroy(_mem);
-		_alloc.deallocate(_mem, _capacity);
+		if (_capacity) _alloc.deallocate(_mem, _capacity);
 		_mem = NULL;
 	}
 
@@ -290,17 +290,14 @@ public:
 	void push_back(const_reference value) {
 		if (_size == _capacity)
 			reserve(_capacity * 2 + !_capacity);
-			// reserve((_capacity | !_capacity) << !!_capacity);
 		_mem[_size] = value;
 		_size += 1;
 	}
 
 // pop_back 
 	void pop_back() {
-		// if (!empty())
-		if (_size > 0)
-			destroy(end() - 1); // what...
 		_size -= 1;
+		if (_size > 0) destroy(end() - 1); // what...
 	}
 
 // swap 
@@ -317,7 +314,7 @@ public:
 	size_type	size() const { return _size; }
 	bool		empty() const { return begin() == end(); }
 	size_type	capacity() const { return _capacity; }
-	size_type	max_size() const {
+	size_type	max_size() const { // sorry 
 		static size_type max =
 			(static_cast<unsigned long long>(~0) >> 1) /
 			sizeof(value_type);

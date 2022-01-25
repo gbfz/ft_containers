@@ -20,7 +20,7 @@ private:
 
 public:
 // ctors, dtor 
-	explicit stack(const Container& cont = Container()) {}
+	explicit stack(const Container& other_cont = Container()): cont(other_cont) {}
 	stack(const stack& other): cont(other.cont) {}
 	~stack() {}
 

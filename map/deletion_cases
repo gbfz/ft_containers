@@ -24,10 +24,7 @@ rebalance:
 	case 2: y is black and has black kid(s)
 		p.color = black, y.color = red
 		if (z.color == red) z.color = black
-		else if (z != root) {
-			color z double black
-			repeat rebalance for z
-		}
+		else if (z != root) repeat rebalance for z
 	case 3: y is red
 		case is_left_child(y): right_rotate(z)
 		case is_right_child(y): left_rotate(z)

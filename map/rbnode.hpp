@@ -3,10 +3,30 @@
 
 namespace ft {
 
-// node color definition 
-typedef bool	color_t;
-#define red	false
-#define black	true
+// color definition (i'm not a loser to just use #define) 
+struct black_t {};
+struct red_t {};
+
+extern const black_t	black;
+extern const red_t	red;
+
+struct color_t {
+	bool color;
+
+	color_t(black_t): color(true) {}
+	color_t(red_t): color(false) {}
+
+	inline color_t& operator = (black_t) { color = true; return *this; }
+	inline color_t& operator = (red_t  ) { color = false; return *this; }
+
+	inline bool operator == (color_t other) const { return color == other.color; }
+	inline bool operator != (color_t other) const { return color != other.color; }
+	inline bool operator == (red_t) const { return color == false; }
+	inline bool operator != (red_t) const { return color != false; }
+	inline bool operator == (black_t) const { return color == true; }
+	inline bool operator != (black_t) const { return color != true; }
+};
+
 
 template <typename T>
 struct RBNode {
@@ -38,7 +58,7 @@ struct RBNode {
 		return *this;
 	}
 
-// nil check 
+// nil check declaration 
 	template <typename U> friend bool is_nil(RBNode* node);
 	template <typename U> friend bool not_nil(RBNode* node);
 
