@@ -6,6 +6,7 @@
 #include "../iterator/reverse_iterator.hpp"
 #include "../utilities/pair.hpp"
 #include <iostream> // TODO: delete 
+#include <limits>
 
 namespace ft {
 
@@ -14,8 +15,9 @@ namespace ft {
 #define BLK "\033[1;30m"
 #define RESET "\033[0m"
 
-template <typename Value, typename Compare = std::less<Value>, class Allocator = std::allocator<Value> >
-class RBTree {
+template<class Value, class Compare = std::less<Value>,
+	 class Allocator = std::allocator<Value>
+> class RBTree {
 public:
 // type definitions 
 	typedef Value					value_type;
@@ -23,28 +25,43 @@ public:
 	typedef typename Value_alloc::
 		template rebind<RBNode<Value> >::other	Node_alloc;
 	typedef	typename Node_alloc::pointer		Nodeptr;
-	typedef Compare					compare_type;
+	typedef Compare					key_compare;
 	typedef tree_iterator<value_type>		iterator;
 	typedef tree_iterator<const value_type>		const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
 
+protected:
+// comparison functor 
+	class value_compare {
+		public:
+			typedef bool		result_type;
+			typedef value_type	first_argument_type;
+			typedef value_type	second_argument_type;
+		protected:
+			Compare	comp;
+		public:
+			value_compare(Compare c): comp(c) {}
+			bool operator () (const value_type& lhs, const value_type& rhs) const {
+				return lhs.first < rhs.first;
+			}
+	};
+
 private:
 // data fields 
 	Value_alloc	value_alloc;
 	Node_alloc	node_alloc;
-	compare_type	comp;
 	Nodeptr		nil;
 	Nodeptr		header;
 	Nodeptr		root;
 	size_t		tree_size;
+	value_compare	comp;
 
 public:
 // ctors, dtor 
 	RBTree(): // {
 		value_alloc(Value_alloc()), node_alloc(Node_alloc()),
-		comp(compare_type()),
-		nil(create_nil_node()), root(nil), tree_size(0) {
+		nil(create_nil_node()), root(nil), tree_size(0), comp(key_compare()) {
 			header = create_nil_node();
 			header->mom = nil;
 			header->left = header;
@@ -54,8 +71,8 @@ public:
 			root->right = header;
 	}
 	explicit RBTree(const RBTree& other): // {
-		value_alloc(other.value_alloc), node_alloc(other.node_alloc), comp(other.comp),
-		nil(other.nil), header(other.header), root(other.root), tree_size(other.tree_size) {
+		value_alloc(other.value_alloc), node_alloc(other.node_alloc),//, comp(other.comp),
+		comp(other.comp), nil(other.nil), header(other.header), root(other.root), tree_size(other.tree_size) {
 	}
 	~RBTree() {
 		clear();
@@ -113,82 +130,110 @@ private:
 	}
 
 public:
+// begin, rbegin 
+	iterator begin() {
+		return iterator(header->right);
+	}
+	const_iterator begin() const {
+		return const_iterator(header->right);
+	}
+	reverse_iterator rbegin() {
+		return reverse_iterator(end());
+	}
+	const_reverse_iterator rbegin() const {
+		return const_reverse_iterator(end());
+	}
+
+// end, rend 
+	iterator end() {
+		return iterator(header);
+	}
+	const_iterator end() const {
+		return const_iterator(header);
+	}
+	reverse_iterator rend() {
+		return reverse_iterator(begin());
+	}
+	const_reverse_iterator rend() const {
+		return const_reverse_iterator(begin());
+	}
+
+// size 
+	size_t size() const { return tree_size; }
+
+// empty 
+	bool empty() const { return begin() == end(); }
+
 // find 
-	template <typename Key>
-	iterator find(const Key& key) {
+	iterator find(const value_type& value) {
 		Nodeptr node = root;
-		while (not_nil(node) && key != node->value.first) {
-			if (key < node->value.first)
+		while (not_nil(node) && value != node->value) {
+			if (comp(value, node->value))
 				node = node->left;
 			else node = node->right;
 		}
-		if (node == nil) return end();
+		if (is_nil(node)) return end();
 		return iterator(node);
 	}
-	template <typename Key>
-	const_iterator find(const Key& key) const {
+	const_iterator find(const value_type& value) const {
 		Nodeptr node = root;
-		while (not_nil(node) && key != node->value.first) {
-			if (key < node->value.first)
+		while (not_nil(node) && value != node->value) {
+			if (comp(value, node->value))
 				node = node->left;
 			else node = node->right;
 		}
-		if (node == nil) return end();
+		if (is_nil(node)) return end();
 		return const_iterator(node);
 	}
 
 // lower bound 
-	template <typename Key>
-	iterator lower_bound(const Key& key) {
-		if (key < header->right->value.first)
+	iterator lower_bound(const value_type& value) {
+		if (comp(value, header->right->value))
 			return begin();
-		if (key > header->left->value.first)
+		if (comp(header->left->value, value))
 			return end();
 		Nodeptr node = root;
-		while (key <= node->left->value.first)
+		while (!comp(value, node->left->value))
 			node = node->left;
-		while (key > node->value.first)
+		while (comp(node->value, value))
 			node = node->right;
 		return iterator(node);
 	}
-	template <typename Key>
-	const_iterator lower_bound(const Key& key) const {
-		if (key < header->right->value.first)
+	const_iterator lower_bound(const value_type& value) const {
+		if (comp(value, header->right->value))
 			return begin();
-		if (key > header->left->value.first)
+		if (comp(header->left->value, value))
 			return end();
 		Nodeptr node = root;
-		while (key <= node->left->value.first)
+		while (!comp(value, node->left->value))
 			node = node->left;
-		while (key > node->value.first)
+		while (comp(node->value, value))
 			node = node->right;
 		return const_iterator(node);
 	}
 
 // upper bound 
-	template <typename Key>
-	iterator upper_bound(const Key& key) {
-		iterator lb = lower_bound(key);
-		if (key == lb->first)
+	iterator upper_bound(const value_type& value) {
+		iterator lb = lower_bound(value);
+		// if (value == lb)
+		if (!comp(value, *lb))
 			return ++lb;
 		return lb;
 	}
-	template <typename Key>
-	const_iterator upper_bound(const Key& key) const {
-		iterator lb = lower_bound(key);
-		if (key == lb->first)
+	const_iterator upper_bound(const value_type& value) const {
+		const_iterator lb = lower_bound(value);
+		// if (value == lb)
+		if (!comp(value, lb.base()->value))
 			return ++lb;
 		return lb;
 	}
 
 // equal range 
-	template <typename Key>
-	ft::pair<iterator, iterator> equal_range(const Key& key) {
-		return ft::make_pair(lower_bound(key), upper_bound(key));
+	ft::pair<iterator, iterator> equal_range(const value_type& value) {
+		return ft::make_pair(lower_bound(value), upper_bound(value));
 	}
-	template <typename Key>
-	ft::pair<const_iterator, const_iterator> equal_range(const Key& key) const {
-		return ft::make_pair(lower_bound(key), upper_bound(key));
+	ft::pair<const_iterator, const_iterator> equal_range(const value_type& value) const {
+		return ft::make_pair(lower_bound(value), upper_bound(value));
 	}
 
 // delete node and children 
@@ -281,7 +326,6 @@ private:
 		update_mom(node, origRight);
 		node->mom = origRight;
 	}
-
 // rotate right 
 	void rotate_right(Nodeptr node) {
 		Nodeptr origLeft = node->left;
@@ -293,7 +337,6 @@ private:
 		update_mom(node, origLeft);
 		node->mom = origLeft;
 	}
-
 // rotate x around y 
 	void rotate_x_around_y(Nodeptr x, Nodeptr y) {
 		if (is_left_child(x))
@@ -318,6 +361,28 @@ public:
 	void insert(InputIt first, InputIt last) {
 		while (first != last)
 			insert(*first++);
+	}
+
+// insert at hinted position 
+	iterator insert(iterator hint, const value_type& value) {
+		iterator f = find(value);
+		if (f != end()) return f;
+		Nodeptr node = create_node(value);
+		if (hint == begin()) {
+			if (!empty() && comp(value, *hint))
+				insert(node, leftmost(root));
+			else insert(node, root);
+		}
+		else if (hint == end()) {
+			if (!empty() && comp(*--hint, value))
+				insert(node, header->left);
+			else insert(node, root);
+		}
+		else insert(node, root);
+		insert_rebalance(node);
+		++tree_size;
+		maintain_header();
+		return iterator(node);
 	}
 
 private:
@@ -349,9 +414,8 @@ private:
 
 // insert node 
 	Nodeptr insert(Nodeptr where, Nodeptr node) {
-		// TODO: comp
-		if (is_nil(where)) return node;
-		if (node->value < where->value) {
+		if (is_nil(where)) return node; // TODO: what if i'm inserting into an empty tree?
+		if (comp(node->value, where->value)) {
 			where->left = insert(where->left, node);
 			where->left->mom = where;
 		}
@@ -451,37 +515,6 @@ private:
 	}
 
 public:
-// begin, rbegin 
-	iterator begin() {
-		return iterator(header->right);
-	}
-	const_iterator begin() const {
-		return const_iterator(header->right);
-	}
-	reverse_iterator rbegin() {
-		return reverse_iterator(end());
-	}
-	const_reverse_iterator rbegin() const {
-		return const_reverse_iterator(end());
-	}
-
-// end, rend 
-	iterator end() {
-		return iterator(header);
-	}
-	const_iterator end() const {
-		return const_iterator(header);
-	}
-	reverse_iterator rend() {
-		return reverse_iterator(begin());
-	}
-	const_reverse_iterator rend() const {
-		return const_reverse_iterator(begin());
-	}
-
-// size 
-	size_t size() const { return tree_size; }
-
 // swap 
 	void swap(RBTree& other) {
 		std::swap(nil, other.nil);
@@ -493,6 +526,10 @@ public:
 		std::swap(comp, other.comp);
 	}
 
+// key compare, value compare 
+	key_compare key_comp() const { return key_compare(); }
+	value_compare value_comp() const { return comp; }
+
 }; // ! rbtree 
 
 // swap 
@@ -500,6 +537,5 @@ template <typename V, typename C, typename A>
 void swap(RBTree<V, C, A>& lhs, RBTree<V, C, A>& rhs) {
 	lhs.swap(rhs);
 }
-
 
 } // ! namespace ft

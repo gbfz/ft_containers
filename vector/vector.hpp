@@ -39,9 +39,8 @@ protected:
 // memory methods 
 // update mem
 	void	update_mem(pointer new_mem, size_type new_cap, size_type new_size) {
-		// if (_capacity > 0)
 		if (_mem) _alloc.destroy(_mem);
-			_alloc.deallocate(_mem, _capacity);
+		_alloc.deallocate(_mem, _capacity);
 		_mem = new_mem;
 		_capacity = new_cap;
 		_size = new_size;
@@ -297,7 +296,7 @@ public:
 // pop_back 
 	void pop_back() {
 		_size -= 1;
-		if (_size > 0) destroy(end() - 1); // what...
+		if (_size > 0) destroy(end() - 1);
 	}
 
 // swap 
