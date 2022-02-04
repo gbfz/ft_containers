@@ -1,13 +1,9 @@
 #pragma  once
 #include <memory>
 #include <algorithm>
-#include "iterator.hpp"
-#include "utility.hpp"
-// #include "../iterator/iterator.hpp" // TODO: delete 
-// #include "../utilities/utility.hpp"
-// #include "comparison.hpp"
-// #include "../utilities/comparison.hpp" // TODO: delete 
 #include <stdexcept>
+#include "../iterator/iterator.hpp"
+#include "../utilities/utility.hpp"
 
 namespace ft {
 

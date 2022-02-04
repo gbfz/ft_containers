@@ -1,5 +1,4 @@
-#include "vector.hpp"
-// #include "../vector/vector.hpp" // TODO: delete 
+#include "../vector/vector.hpp"
 
 namespace ft {
 

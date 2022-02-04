@@ -1,6 +1,6 @@
 #pragma  once
 // #include "../utilities/ft_type_traits.hpp"
-#include "ft_type_traits.hpp"
+#include "../utilities/ft_type_traits.hpp"
 #include "ft_iterator_base_types.hpp"
 
 namespace ft {
