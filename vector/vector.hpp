@@ -44,11 +44,10 @@ protected:
 		_size = new_size;
 	}
 // construct 
-	void	construct(const iterator& it, const_reference value) {
+	void	construct(iterator it, const_reference value) {
 		_alloc.construct(&(*it), value);
 	}
-	void	construct(const iterator& first, const iterator& last,
-			  const_reference value) {
+	void	construct(iterator first, iterator last, const_reference value) {
 		for (iterator it(first); it < last; ++it)
 			construct(it, value);
 	}
@@ -71,8 +70,7 @@ public:
 		_size(other._size), _capacity(other._capacity) {
 		if (_capacity) {
 			_mem = _alloc.allocate(_capacity);
-			construct(begin(), end(), value_type());
-			std::copy(other.begin(), other.end(), _mem);
+			std::uninitialized_copy(other.begin(), other.end(), _mem);
 		} else _mem = NULL;
 	}
 	explicit vector(const Alloc& alloc): // {
@@ -81,9 +79,9 @@ public:
 	explicit vector(size_type count, const_reference value = value_type(),
 				const Alloc& alloc = Alloc()):
 		_alloc(alloc), _size(count), _capacity(count) {
-		if (_capacity) {
-			_mem = _alloc.allocate(_capacity);
-			construct(iterator(_mem), iterator(_mem + _capacity), value);
+		if (count) {
+			_mem = _alloc.allocate(count);
+			construct(iterator(_mem), iterator(_mem + count), value);
 		} else _mem = 0;
 	}
 	template <class InputIt>
@@ -93,15 +91,14 @@ public:
 		if (distance) {
 			_mem = _alloc.allocate(distance);
 			_size = _capacity = distance;
-			construct(iterator(_mem), iterator(_mem + _size), value_type());
-			std::copy(first, last, _mem);
+			std::uninitialized_copy(first, last, _mem);
 		} else {
 			_mem = NULL;
 			_capacity = _size = 0;
 		}
 	}
 	~vector() {
-		if (_mem) _alloc.destroy(_mem);
+		if (_mem) destroy(iterator(_mem), iterator(_mem + _size));
 		if (_capacity) _alloc.deallocate(_mem, _capacity);
 		_mem = NULL;
 	}
@@ -124,7 +121,7 @@ private: // only dispatcher is public
 		if (count > max_size())
 			throw std::length_error("Attempt to assign too many values");
 		resize(count);
-		construct(begin(), end(), value);
+		std::uninitialized_fill(begin(), end(), value);
 	}
 // range 
 	template <class InputIt>
@@ -133,7 +130,7 @@ private: // only dispatcher is public
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign too many values");
 		pointer new_mem = _alloc.allocate(dist);
-		std::copy(first, last, new_mem);
+		std::uninitialized_copy(first, last, new_mem);
 		update_mem(new_mem, std::max(_capacity, dist), dist);
 	}
 public: // assign dispatch disambiguation 
@@ -149,8 +146,7 @@ public: // assign dispatch disambiguation
 			throw std::length_error("Cannot reserve given amount of memory");
 		if (new_cap <= _capacity) return;
 		pointer new_mem = _alloc.allocate(new_cap);
-		construct(iterator(new_mem), iterator(new_mem + new_cap), value_type());
-		std::copy(begin(), end(), new_mem);
+		std::uninitialized_copy(begin(), end(), new_mem);
 		update_mem(new_mem, new_cap, _size);
 	}
 
@@ -165,8 +161,11 @@ public: // assign dispatch disambiguation
 			return;
 		}
 		pointer new_mem = _alloc.allocate(count);
-		construct(iterator(new_mem), iterator(new_mem + count), value);
-		if (_size) std::copy(begin(), end(), new_mem);
+		if (_size) {
+			std::uninitialized_copy(begin(), end(), new_mem);
+			construct(iterator(new_mem + _size), iterator(new_mem + count), value);
+		}
+		else construct(iterator(new_mem), iterator(new_mem + count), value);
 		update_mem(new_mem, count, count);
 	}
 
@@ -217,6 +216,7 @@ public: // assign dispatch disambiguation
 		if (_size == _capacity)
 			reserve(_size * 2 + !_size);
 		pos = begin() + offset;
+		construct(end(), value_type());
 		std::copy_backward(pos, end(), end() + 1);
 		construct(pos, value);
 		_size += 1;
@@ -249,9 +249,6 @@ private:
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
 		std::copy(first, last, pos);
-		// if (first < last)
-			// std::copy(first, last, pos);
-		// else std::reverse_copy(first, last, pos);
 		_size += count;
 	}
 public:
@@ -287,7 +284,7 @@ public:
 	void push_back(const_reference value) {
 		if (_size == _capacity)
 			reserve(_capacity * 2 + !_capacity);
-		_mem[_size] = value;
+		construct(iterator(_mem + _size), value);
 		_size += 1;
 	}
 
@@ -309,14 +306,9 @@ public:
 	reference	front() const { return _mem[0]; }
 	reference	back() const { return _mem[_size - !empty()]; }
 	size_type	size() const { return _size; }
-	bool		empty() const { return begin() == end(); }
+	bool		empty() const { return _size == 0; }
 	size_type	capacity() const { return _capacity; }
-	size_type	max_size() const { // sorry 
-		static size_type max =
-			(static_cast<unsigned long long>(~0) >> 1) /
-			sizeof(value_type);
-		return max;
-	}
+	size_type	max_size() const { return _alloc.max_size(); }
 	allocator_type	get_allocator() const { return _alloc; }
 
 }; // ! class vector

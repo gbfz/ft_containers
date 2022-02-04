@@ -1,16 +1,10 @@
+#pragma  once
 #include "RBNode.hpp"
 #include <functional>
 #include <memory>
-#include <limits>
 #include "../iterator/rbtree_iterator.hpp"
 #include "../iterator/reverse_iterator.hpp"
 #include "../utilities/utility.hpp"
-
-// TODO: normal includes 
-// #include "../iterator/rbtree_iterator.hpp"
-// #include "../iterator/reverse_iterator.hpp"
-// #include "../utilities/pair.hpp"
-// #include "../utilities/comparison.hpp"
 
 namespace ft {
 
@@ -98,7 +92,7 @@ private:
 // create nil node 
 	Nodeptr create_nil_node() {
 		Nodeptr _nil = node_alloc.allocate(1);
-		// value_alloc.construct(&_nil->value, Value());
+		value_alloc.construct(&_nil->value, Value());
 		_nil->mom = _nil->left = _nil->right = 0;
 		_nil->color = black;
 		_nil->is_nil = true;
@@ -372,14 +366,30 @@ public:
 		}
 	}
 
-// insert at hinted position (no) 
+// insert at hinted position 
 	iterator insert(iterator hint, const value_type& value) {
-		static_cast<void>(hint);
-		return insert(value).first;
+		iterator f = find(value);
+		if (f != end()) return f;
+		if (comp(*hint, value))
+			return insert(value).first;
+		Nodeptr newNode = create_node(value);
+		insert(hint.base(), newNode);
+		insert_rebalance(newNode);
+		++tree_size;
+		maintain_header();
+		return iterator(newNode);
 	}
 	iterator insert(const_iterator hint, const value_type& value) {
-		static_cast<void>(hint);
-		return insert(value).first;
+		iterator f = find(value);
+		if (f != end()) return f;
+		if (comp(*hint, value))
+			return insert(value).first;
+		Nodeptr newNode = create_node(value);
+		insert(hint.base(), newNode);
+		insert_rebalance(newNode);
+		++tree_size;
+		maintain_header();
+		return iterator(newNode);
 	}
 
 private:

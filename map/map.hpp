@@ -1,7 +1,6 @@
 #pragma  once
 #include <stdexcept>
 #include "../rbtree/RBTree.hpp"
-#include "../utilities/utility.hpp"
 
 namespace ft {
 
