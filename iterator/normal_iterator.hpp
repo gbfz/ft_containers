@@ -112,7 +112,8 @@ inline typename normal_iterator<type, _container>::difference_type
 operator -
 (const normal_iterator<type, _container>& lhs,
  const normal_iterator<type, _container>& rhs) {
-	return lhs.base () - rhs.base();
+	// return &(*lhs) - &(*rhs);
+	return lhs.base() - rhs.base();
 }
 
 // iterator comparison 

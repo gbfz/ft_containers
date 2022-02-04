@@ -1,10 +1,12 @@
 #pragma  once
 #include <memory>
 #include <algorithm>
-// #include "iterator.hpp"
-#include "../iterator/iterator.hpp" // TODO: delete 
+#include "iterator.hpp"
+#include "utility.hpp"
+// #include "../iterator/iterator.hpp" // TODO: delete 
+// #include "../utilities/utility.hpp"
 // #include "comparison.hpp"
-#include "../utilities/comparison.hpp" // TODO: delete 
+// #include "../utilities/comparison.hpp" // TODO: delete 
 #include <stdexcept>
 
 namespace ft {
@@ -24,8 +26,8 @@ public:
 	typedef ptrdiff_t				difference_type;
 	typedef ft::normal_iterator<pointer, vector>		iterator;
 	typedef ft::normal_iterator<const_pointer, vector> 	const_iterator;
-	typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
 	typedef ft::reverse_iterator<iterator>			reverse_iterator;
+	typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
 
 protected:
 // member fields 
@@ -85,20 +87,18 @@ public:
 		_alloc(alloc), _size(count), _capacity(count) {
 		if (_capacity) {
 			_mem = _alloc.allocate(_capacity);
-			construct(iterator(_mem), iterator(_mem + _size), value);
+			construct(iterator(_mem), iterator(_mem + _capacity), value);
 		} else _mem = 0;
 	}
 	template <class InputIt>
-	vector(InputIt first, InputIt last,
-			const Alloc& alloc = Alloc()): _alloc(alloc) {
+	vector(typename enable_if<!is_integral<InputIt>::value, InputIt>::type first,
+			InputIt last, const Alloc& alloc = Alloc()): _alloc(alloc) {
 		difference_type distance = std::abs(std::distance(first, last));
 		if (distance) {
 			_mem = _alloc.allocate(distance);
 			_size = _capacity = distance;
 			construct(iterator(_mem), iterator(_mem + _size), value_type());
-			if (first < last)
-				std::copy(first, last, _mem);
-			else std::reverse_copy(first, last, _mem);
+			std::copy(first, last, _mem);
 		} else {
 			_mem = NULL;
 			_capacity = _size = 0;
@@ -110,7 +110,7 @@ public:
 		_mem = NULL;
 	}
 
-// = 
+// operator = 
 	vector&	operator = (const vector& other) {
 		if (this == &other) return *this;
 		if (!other.empty()) {
@@ -137,9 +137,7 @@ private: // only dispatcher is public
 		if (dist > max_size())
 			throw std::length_error("Attempt to assign too many values");
 		pointer new_mem = _alloc.allocate(dist);
-		if (first < last)
-			std::copy(first, last, new_mem);
-		else std::reverse_copy(last, first, new_mem);
+		std::copy(first, last, new_mem);
 		update_mem(new_mem, std::max(_capacity, dist), dist);
 	}
 public: // assign dispatch disambiguation 
@@ -254,9 +252,10 @@ private:
 			reserve(_size + count);
 		pos = begin() + offset;
 		std::copy_backward(pos, end(), end() + count);
-		if (first < last)
-			std::copy(first, last, pos);
-		else std::reverse_copy(first, last, pos);
+		std::copy(first, last, pos);
+		// if (first < last)
+			// std::copy(first, last, pos);
+		// else std::reverse_copy(first, last, pos);
 		_size += count;
 	}
 public:
@@ -273,16 +272,19 @@ public:
 		destroy(pos);
 		std::copy(pos + 1, end(), pos);
 		_size -= 1;
-		return pos + 1;
+		return pos;
 	}
 	iterator erase(iterator first, iterator last) {
 		if (first < begin() || last > end())
 			throw std::out_of_range("Invalid iterators in erase.2");
 		if (first == last) return last;
+		bool last_is_end = last == end();
+		difference_type start = std::distance(begin(), first);
 		destroy(first, last);
 		std::copy(last, end(), first);
 		_size -= std::distance(first, last);
-		return last + (last < end());
+		if (last_is_end) return end();
+		return iterator(begin() + start);
 	}
 
 // push_back 
@@ -301,10 +303,10 @@ public:
 
 // swap 
 	void	swap(vector& other) {
-		if (this == &other) return;
-		vector t = *this;
-		*this = other;
-		other = t;
+		std::swap(_mem, other._mem);
+		std::swap(_size, other._size);
+		std::swap(_capacity, other._capacity);
+		std::swap(_alloc, other._alloc);
 	}
 
 // accessors 

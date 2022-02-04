@@ -1,5 +1,4 @@
 #pragma  once
-#include <stddef.h>
 #include <bits/stl_iterator_base_types.h> // TODO: is this right ?
 
 namespace ft {
@@ -19,7 +18,7 @@ struct iterator_traits<T*> {
 	typedef T				value_type;
 	typedef T*				pointer;
 	typedef T&				reference;
-	typedef ptrdiff_t			difference_type;
+	typedef std::ptrdiff_t			difference_type;
 }; // ! iterator traits<T*>
 
 template <typename T>
@@ -28,7 +27,7 @@ struct iterator_traits<const T*> {
 	typedef T				value_type;
 	typedef const T*			pointer;
 	typedef const T&			reference;
-	typedef ptrdiff_t			difference_type;
+	typedef std::ptrdiff_t			difference_type;
 }; // ! iterator traits<const T*>
 
 } // ! namespace ft

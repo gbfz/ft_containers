@@ -6,15 +6,13 @@ namespace ft {
 template <class T1, class T2>
 struct pair {
 // member fields 
-	// typedef typename ft::remove_const<__T1>::type T1;
-	// typedef typename ft::remove_const<__T2>::type T2;
 	T1 first;
 	T2 second;
 // constructors 
 	pair():
 		first(T1()), second(T2()) {}
 
-	pair(T1& _f, T2& _s):
+	pair(const T1& _f, const T2& _s):
 		first(_f), second(_s) {}
 
 	template <class U1, class U2>

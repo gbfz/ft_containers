@@ -2,28 +2,22 @@
 
 namespace ft {
 
-// ft::equal 
+// equal 
 template <typename InpIt1, typename InpIt2>
 bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2) {
-	for ( ; first1 < last1; ++first1, ++first2)
+	for ( ; first1 != last1; ++first1, ++first2)
 		if (*first1 != *first2) return false;
 	return true;
 }
 
-template <typename typeL, typename typeR>
-static bool __is_equal(const typeL& lhs, const typeR& rhs) {
-	return lhs == rhs;
-}
-
-template <typename InpIt1, typename InpIt2, class Compare>
-bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2, Compare comp = __is_equal) {
-	for ( ; first1 < last1; ++first1, ++first2)
-		if (comp(*first1, *first2) == false) return false;
+template <typename InpIt1, typename InpIt2, class BinaryPred>
+bool equal(InpIt1 first1, InpIt2 last1, InpIt2 first2, BinaryPred comp) {
+	for ( ; first1 != last1; ++first1, ++first2)
+		if (!comp(*first1, *first2)) return false;
 	return true;
 }
 
-// ft::lexicographical_compare 
-/*
+// lexicographical compare 
 template <typename InpIt1, typename InpIt2>
 bool lexicographical_compare(InpIt1 first1, InpIt1 last1,
 			     InpIt2 first2, InpIt2 last2) {
@@ -33,17 +27,11 @@ bool lexicographical_compare(InpIt1 first1, InpIt1 last1,
 	}
 	return first1 == last1 && first2 != last2;
 }
-*/
 
-template <typename typeL, typename typeR>
-static bool __is_less(const typeL& lhs, const typeR& rhs) {
-	return lhs < rhs;
-}
-
-template <typename InpIt1, typename InpIt2, class Compare>
+template <typename InpIt1, typename InpIt2, typename Compare>
 bool lexicographical_compare(InpIt1 first1, InpIt1 last1,
 			     InpIt2 first2, InpIt2 last2,
-			     Compare is_less = __is_less) {
+			     Compare is_less) {
 	for ( ; first1 != last1 && first2 != last2; ++first1, ++first2) {
 		if (is_less(*first1, *first2)) return true;
 		if (is_less(*first2, *first1)) return false;

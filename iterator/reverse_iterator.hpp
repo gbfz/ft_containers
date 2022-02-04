@@ -1,14 +1,16 @@
 #pragma  once
-#include "../utilities/ft_type_traits.hpp"
+// #include "../utilities/ft_type_traits.hpp"
+#include "ft_type_traits.hpp"
 #include "ft_iterator_base_types.hpp"
 
 namespace ft {
 
 template <typename _Iterator>
-class reverse_iterator: public _Iterator {
+class reverse_iterator {
 protected:
 // underlying memory accessor 
 	_Iterator	_base;
+
 public:
 // member types definitions 
 	typedef _Iterator				base_type;
@@ -16,6 +18,7 @@ public:
 	typedef typename traits::pointer		pointer;
 	typedef typename traits::reference		reference;
 	typedef typename traits::difference_type	difference_type;
+
 // constructors 
 	reverse_iterator():
 		_base() {}
@@ -26,18 +29,20 @@ public:
 	template <typename other_type>
 	reverse_iterator(const reverse_iterator<other_type>& other):
 		_base(other.base()) {}
+
 // *, ->, [] 
 	reference operator * () const {
 		base_type tmp = _base;
-		return *--tmp;
+		return *(--tmp);
 	}
 	pointer operator -> () const {
 		base_type tmp = _base;
 		return iterator_to_pointer(--tmp);
 	}
 	reference operator [] (difference_type off) const {
-		return *(*this + off);
+		return _base[-off - 1];
 	}
+
 // ++ 
 	reverse_iterator& operator ++ () {
 		--_base;
@@ -48,6 +53,7 @@ public:
 		--_base;
 		return tmp;
 	}
+
 // -- 
 	reverse_iterator& operator -- () {
 		++_base;
@@ -58,6 +64,7 @@ public:
 		++_base;
 		return tmp;
 	}
+
 // +, +=
 	reverse_iterator operator + (difference_type off) {
 		return reverse_iterator(_base - off);
@@ -66,6 +73,7 @@ public:
 		_base -= off;
 		return *this;
 	}
+
 // -, -= 
 	reverse_iterator operator - (difference_type off) {
 		return reverse_iterator(_base + off);
@@ -74,10 +82,12 @@ public:
 		_base += off;
 		return *this;
 	}
+
 // base 
 	base_type base() const {
 		return _base;
 	}
+
 private:
 // base to pointer 
 //   if base_type is a pointer
@@ -92,6 +102,7 @@ private:
 	iterator_to_pointer(__base_type ptr) {
 		return ptr.operator->();
 	}
+
 }; // ! class reverse iterator
 
 // iterator difference 
@@ -100,14 +111,14 @@ inline typename reverse_iterator<typeL>::difference_type
 operator -
 (const reverse_iterator<typeL>& lhs,
  const reverse_iterator<typeR>& rhs) {
-	return lhs.base() - rhs.base();
+	return rhs.base() - lhs.base();
 }
 template <typename type>
 inline typename reverse_iterator<type>::difference_type
 operator -
 (const reverse_iterator<type>& lhs,
  const reverse_iterator<type>& rhs) {
-	return lhs.base() - rhs.base();
+	return rhs.base() - lhs.base();
 }
 
 // iterator comparison 

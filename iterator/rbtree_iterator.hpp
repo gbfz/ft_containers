@@ -1,7 +1,9 @@
 #pragma once
-// TODO: normal includes 
-#include "../map/rbnode.hpp"
+#include "RBNode.hpp"
 #include "ft_iterator_base_types.hpp"
+// TODO: normal includes 
+// #include "../rbtree/RBNode.hpp"
+// #include "ft_iterator_base_types.hpp"
 
 namespace ft {
 
@@ -18,7 +20,6 @@ public:
 
 private:
 // memory accessor 
-	// typedef RBNode<typename ft::remove_const<value_type>::type>*	Nodeptr;
 	typedef RBNode<value_type>*	Nodeptr;
 	Nodeptr				node;
 
@@ -26,17 +27,21 @@ public:
 // ctors, dtor 
 	tree_iterator() {}
 	tree_iterator(Nodeptr other): node(other) {}
-	tree_iterator(const tree_iterator
-			<const value_type>& other): node(other.base()) {}
-	tree_iterator(const tree_iterator
-			<typename ft::remove_const<value_type>::type>& other):
-		node(other.base()) {}
+	tree_iterator(const tree_iterator<value_type>& other): node(other.base()) {}
 	~tree_iterator() {}
 
 // operator = 
+	/*
+	tree_iterator& operator = (const tree_iterator& other) {
+		if (this == &other) return *this;
+		node = other.base();
+		return *this;
+	}
+	*/
 	template <typename _other>
-	tree_iterator operator = (const tree_iterator<typename ft::remove_const
+	tree_iterator& operator = (const tree_iterator<typename ft::remove_const
 			<value_type>::type>& other) {
+		if (this == &other) return *this;
 		node = other.base();
 		return *this;
 	}

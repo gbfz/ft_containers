@@ -1,404 +1,117 @@
-#include "vector.hpp"
-#include <vector>
 #include <iostream>
-#include <sstream>
-#include <typeinfo>
+#include <string>
+#include <deque>
+// #if 1 //CREATE A REAL STL EXAMPLE
+#ifdef OSTD
+	#include <map>
+	#include <stack>
+	#include <vector>
+	namespace ft = std;
+#else
+	#include "map.hpp"
+	#include "stack.hpp"
+	#include "vector.hpp"
+#endif
 
-using namespace std;
+#include <stdlib.h>
 
-// print 
-template <typename vector>
-void	print(const vector& v, std::ostream& stream = std::cout) {
-	for (typename vector::const_iterator it = v.begin();
-	     it < v.end(); ++it)
-		stream << *it << ' ';
-	stream << endl;
-}
+#define MAX_RAM 4294967296
+#define BUFFER_SIZE 4096
+struct Buffer
+{
+	int idx;
+	char buff[BUFFER_SIZE];
+};
 
-// test comparison 
-template <typename T>
-string	test_comparison(const ft::vector<T>& a,
-			const ft::vector<T>& b,
-			const std::vector<T>& sa,
-			const std::vector<T>& sb) {
-	if ((a == b) == (sa == sb) &&
-	    (a != b) == (sa != sb) &&
-	    (a <  b) == (sa <  sb) &&
-	    (a >  b) == (sa >  sb) &&
-	    (a <= b) == (sa <= sb) &&
-	    (a >= b) == (sa >= sb))
-		return "they're equal!";
-	return "something went wrong:(";
-}
-// test comparison on self 
-template <typename vector>
-string	test_comparison_with_self(const vector& v) {
-	if (v == v && v <= v && v >= v &&
-	    !(v < v || v > v || v != v))
-		return "all's well!";
-	return "WHAT";
-}
 
-// test properties 
-template <typename T>
-bool	test_property(const T& a, const T& b, bool silent = false) {
-	if (a == b) {
-		!silent && cout << "good\n";
-		return true;
-	}
-	if (silent) return false;
-	cout << "bad\n";
-	cout << "|-> std: " << a << endl;
-	cout << "|->  ft: " << b << endl;
-	return false;
-}
-// compare max 
-template <typename T>
-bool	compare_max
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "max: ";
-	return test_property(a.max_size(), b.max_size(), silent);
-}
-// compare size 
-template <typename T>
-bool	compare_size
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "size: ";
-	return test_property(a.size(), b.size(), silent);
-}
-// compare cap 
-template <typename T>
-bool	compare_cap
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "capacity: ";
-	return test_property(a.capacity(), b.capacity(), silent);
-}
-// compare front 
-template <typename T>
-bool	compare_front
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "front: ";
-	if (a.empty() & b.empty()) {
-		!silent && cout << "good\n";
-		return true;
-	}
-	if (a.empty() ^ b.empty()) {
-		!silent && cout << "front bad\n";
-		return false;
-	}
-	return test_property(a.front(), b.front(), silent);
-}
-// compare back 
-template <typename T>
-bool	compare_back
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "back: ";
-	if (a.empty() & b.empty()) {
-		!silent && cout << "good\n";
-		return true;
-	}
-	if (a.empty() ^ b.empty()) {
-		!silent && cout << "back bad\n";
-		return false;
-	}
-	return test_property(a.back(), b.back(), silent);
-}
-// compare empty 
-template <typename T>
-bool	compare_empty
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "empty: ";
-	return test_property(a.empty(), b.empty(), silent);
-}
-// compare at, [] 
-template <typename T>
-bool	compare_at_and_index
-(const std::vector<T>& a, const ft::vector<T>& b, bool silent = false) {
-	!silent && cout << "at, []: ";
-	if (a.size() != b.size()) {
-		cout << "Cannot compare differently sized vectors\n";
-		return false;
-	}
-	bool all_good = true;
-	for (size_t i = 0; i < a.size(); ++i) {
-		all_good &= a.at(i) == b.at(i);
-		all_good &= a[i] == b[i];
-	}
-	if (all_good) !silent && cout << "good\n";
-	else !silent && cout << "bad\n";
-	return all_good;
-}
-// compare all members 
-template <typename T>
-void	compare_all_properties
-(const std::vector<T>& a, const ft::vector<T>& b) {
-	bool all_good;
-	std::stringstream a_stream, b_stream;
-	all_good = compare_max(a, b, true)   &
-		   compare_cap(a, b, true)   &
-		   compare_empty(a, b, true) &
-		   compare_size(a, b, true)  &
-		   compare_front(a, b, true) &
-		   compare_back(a, b, true)  &
-		   compare_at_and_index(a, b, true);
-	print(a, a_stream); print(b, b_stream);
-	all_good &= a_stream.str() == b_stream.str();
-	cout << (all_good ? "all is good!" : "something went wrong") << endl;
-}
+#define COUNT (MAX_RAM / (int)sizeof(Buffer))
 
-// constructors 
-void	test_constructors() {
-	cout << "\nTESTING CONSTRUCTORS && DESTRUCTOR\n";
-	// default 
-	cout << "default:\n";
+template<typename T>
+class MutantStack : public ft::stack<T>
+{
+public:
+	MutantStack() {}
+	MutantStack(const MutantStack<T>& src) { *this = src; }
+	MutantStack<T>& operator=(const MutantStack<T>& rhs) 
 	{
-		std::vector<string> a;
-		 ft::vector<string> b;
-		compare_all_properties(a, b);
-		a.push_back("zdraste");
-		b.push_back("zdraste");
-		compare_all_properties(a, b);
+		this->c = rhs.c;
+		return *this;
 	}
-	// copy 
-	cout << "\ncopy:\n";
+	~MutantStack() {}
+
+	typedef typename ft::stack<T>::container_type::iterator iterator;
+
+	iterator begin() { return this->c.begin(); }
+	iterator end() { return this->c.end(); }
+};
+
+int main(int argc, char** argv) {
+	if (argc != 2)
 	{
-		 ft::vector<string> a;
-		std::vector<string> sa;
-		compare_all_properties(sa, a);
-		a.insert(a.begin(), "nihuya sebe");
-		sa.insert(sa.begin(), "nihuya sebe");
-		compare_all_properties(sa, a);
-		a.insert(a.begin() + 1, 8, "wow!!");
-		sa.insert(sa.begin() + 1, 8, "wow!!");
-		compare_all_properties(sa, a);
-		 ft::vector<string> b(a);
-		std::vector<string> sb(sa);
-		compare_all_properties(sb, b);
-		b.push_back("ehhh");
-		sb.push_back("ehhh");
-		b.push_back("ehhh");
-		sb.push_back("ehhh");
-		compare_all_properties(sb, b);
-		b.pop_back();
-		sb.pop_back();
-		compare_all_properties(sb, b);
+		std::cerr << "Usage: ./test seed" << std::endl;
+		std::cerr << "Provide a seed please" << std::endl;
+		std::cerr << "Count value: " << COUNT << std::endl;
+		return 1;
 	}
-	// with explicit allocator 
-	cout << "\nexplicit(alloc):\n";
+	const int seed = atoi(argv[1]);
+	srand(seed);
+
+	ft::vector<std::string> vector_str;
+	ft::vector<int> vector_int;
+	ft::stack<int> stack_int;
+	ft::vector<Buffer> vector_buffer;
+	ft::stack<Buffer, std::deque<Buffer> > stack_deq_buffer;
+	ft::map<int, int> map_int;
+
+	for (int i = 0; i < COUNT; i++)
 	{
-		std::allocator<int> alloc;
-		std::vector<char> a(alloc);
-		 ft::vector<char> b(alloc);
-		compare_all_properties(a, b);
-		a.push_back('o');
-		b.push_back('o');
-		compare_all_properties(a, b);
-		a.pop_back();
-		b.pop_back();
-		compare_all_properties(a, b);
+		vector_buffer.push_back(Buffer());
 	}
-	// with count, value_type && alloc 
-	cout << "\nwith count && value && alloc:\n";
+
+	for (int i = 0; i < COUNT; i++)
 	{
-		size_t	count		= 15;
-		string	value		= "жесть";
-		std::allocator<string>	alloc;
-		std::vector<string>	a(count, value, alloc);
-		 ft::vector<string>	b(count, value, alloc);
-		compare_all_properties(a, b);
-		a.erase(a.begin(), a.end());
-		b.erase(b.begin(), b.end());
-		compare_all_properties(a, b);
+		const int idx = rand() % COUNT;
+		vector_buffer[idx].idx = 5;
 	}
-	// range constructor 
-	cout << "\nwith range:\n";
+	ft::vector<Buffer>().swap(vector_buffer);
+
+	try
 	{
-		std::vector<string> sa;
-		 ft::vector<string> a;
-		sa.insert(sa.begin(), 9, "420");
-		a.insert(a.begin(), 9, "420");
-		compare_all_properties(sa, a);
-		std::vector<string> sb(sa.begin() + 2, sa.end() - 2);
-		 ft::vector<string> b(a.begin() + 2, a.end() - 2);
-		compare_all_properties(sb, b);
+		for (int i = 0; i < COUNT; i++)
+		{
+			const int idx = rand() % COUNT;
+			vector_buffer.at(idx);
+			std::cerr << "Error: THIS VECTOR SHOULD BE EMPTY!!" <<std::endl;
+		}
 	}
-}
-
-// swap 
-void	test_swap() {
-	cout << "\nTESTING SWAP\n";
-	std::vector<int> sa, sb;
-	 ft::vector<int> a, b;
-	sa.insert(sa.begin(), 9, 420);
-	a.insert(a.begin(), 9, 420);
-	sb.push_back(34);
-	b.push_back(34);
-	compare_all_properties(sa, a);
-	compare_all_properties(sb, b);
-	swap(a, b);
-	compare_all_properties(sa, b);
-	compare_all_properties(sb, a);
-	sb.swap(sa);
-	compare_all_properties(sa, a);
-	compare_all_properties(sb, b);
-}
-
-// test assign 
-void	test_assign() {
-	cout << "\nTESTING ASSIGN\n";
-	// char 
+	catch(const std::exception& e)
 	{
-		 ft::vector<char> a;
-		std::vector<char> b;
-		a.assign(5, 'a');
-		b.assign(5, 'a');
-		compare_all_properties(b, a);
-		string extra(6, 'b');
-		a.assign(extra.begin(), extra.end());
-		b.assign(extra.begin(), extra.end());
-		compare_all_properties(b, a);
+		//NORMAL ! :P
 	}
-	// integer
+	
+	for (int i = 0; i < COUNT; ++i)
 	{
-		 ft::vector<size_t> a;
-		std::vector<size_t> b;
-		a.assign(13, 2147483647);
-		b.assign(13, 2147483647);
-		compare_all_properties(b, a);
-		size_t	arr[5] = {1, 2, 3, 4, 5};
-		a.assign(arr, arr + 5);
-		b.assign(arr, arr + 5);
-		compare_all_properties(b, a);
+		map_int.insert(ft::make_pair(rand(), rand()));
 	}
-}
 
-// clear 
-void	test_clear() {
-	cout << "\nTESTING CLEAR\n";
-	 ft::vector<long> a;
-	std::vector<long> b;
-	a.insert(a.begin(), 15, 55620);
-	b.insert(b.begin(), 15, 55620);
-	compare_all_properties(b, a);
-	a.clear();
-	b.clear();
-	compare_all_properties(b, a);
-	a.push_back(39);
-	b.push_back(39);
-	compare_all_properties(b, a);
-}
-
-// test at, [] 
-void	test_at_and_index() {
-	 ft::vector<string> a;
-	std::vector<string> b;
-	a.assign(14, "damn");
-	b.assign(14, "damn");
-	bool all_good = compare_at_and_index(b, a, true);
-	try {
-		a.at(512) = "what";
-	} catch (...) {
-		all_good &= 1;
+	int sum = 0;
+	for (int i = 0; i < 10000; i++)
+	{
+		int access = rand();
+		sum += map_int[access];
 	}
-	try {
-		b.at(512) = "what";
-	} catch (...) {
-		all_good &= 1;
+	std::cout << "should be constant with the same seed: " << sum << std::endl;
+
+	{
+		ft::map<int, int> copy = map_int;
 	}
-	if (all_good)
-		cout << "all is good!\n";
-	else cout << "at bad\n";
-}
-
-// test reverse iterator 
-template <class vector>
-bool	compare_iterators(const vector& v, size_t offset) {
-	return *(v.begin() + offset) == *(v.rbegin() + offset);
-}
-template <class typeL, class typeR>
-void	compare_two(const typeL& v1, const typeR& v2, size_t offset) {
-	if (v1.size() != v2.size()) {
-		cout << "Cannot compare differently sized containers\n";
-		return;
+	MutantStack<char> iterable_stack;
+	for (char letter = 'a'; letter <= 'z'; letter++)
+		iterable_stack.push(letter);
+	for (MutantStack<char>::iterator it = iterable_stack.begin(); it != iterable_stack.end(); it++)
+	{
+		std::cout << *it;
 	}
-	if (compare_iterators(v1, offset) == compare_iterators(v2, offset))
-		cout << "good\n";
-	else cout << "bad\n";
-}
-void	test_reverse_iterator() {
-	ft::vector<int> a;
-	std::vector<int> b;
-	a.push_back(15);
-	b.push_back(15);
-	cout << "one element:\n";
-	compare_two(a, b, 0);
-	a.push_back(150);
-	b.push_back(150);
-	cout << "two elements:\n";
-	compare_two(a, b, 0);
-	compare_two(a, b, 1);
-	a.insert(a.begin(), 14, 109);
-	b.insert(b.begin(), 14, 109);
-	cout << "many elements:\n";
-	compare_two(a, b, 0);
-	compare_two(a, b, 1);
-	compare_two(a, b, 9);
-	compare_two(a, b, 14);
-	a.erase(a.begin() + 2, a.begin() + 14);
-	b.erase(b.begin() + 2, b.begin() + 14);
-	compare_two(a, b, 0);
-	compare_two(a, b, 1);
-	compare_two(a, b, 3);
-	a.insert(a.begin(), 22);
-	b.insert(b.begin(), 22);
-	print(a); print(b);
-	for (ft::vector<int>::reverse_iterator it = a.rbegin(); it < a.rend(); ++it)
-		cout << *it << ' ';
-	cout << endl;
-	for (std::vector<int>::reverse_iterator it = b.rbegin(); it < b.rend(); ++it)
-		cout << *it << ' ';
-	cout << endl;
-}
-
-// test insert 
-void test_insert() {
-	std::vector<string> a;
-	 ft::vector<string> b;
-	a.resize(15);
-	b.resize(15);
-	std::vector<string>::iterator itf = a.begin() + 4;
-	 ft::vector<string>::iterator its = b.begin() + 4;
-	a.insert(--itf, "wow");
-	b.insert(--its, "wow");
-	compare_all_properties(a, b);
-	print(a); print(b);
-	std::vector<string> a2;
-	 ft::vector<string> b2;
-}
-
-void test_erase() {
-	cout << endl << "__ test erase ¯¯" << endl;
-	std::vector<int> a;
-	 ft::vector<int> b;
-	for (size_t i = 0; i < 12; ++i) {
-		a.push_back(i); a.push_back(i);
-		b.push_back(i); b.push_back(i);
-	}
-	a.erase(std::unique(a.begin(), a.end()), a.end());
-	b.erase(std::unique(b.begin(), b.end()), b.end());
-	compare_all_properties(a, b);
-	print(a); print(b);
-}
-
-int main() {
-	test_constructors();
-	test_swap();
-	test_assign();
-	test_clear();
-	test_at_and_index();
-	test_reverse_iterator();
-	ft::vector<int>::iterator it;
-	ft::vector<int>::const_iterator cit(it);
-	test_insert();
-	test_erase();
+	std::cout << std::endl;
+	return (0);
 }

@@ -1,7 +1,8 @@
-#include "../map/rbtree.hpp"
-#include "../utilities/pair.hpp"
-#include "../utilities/comparison.hpp"
-#include <limits>
+#pragma  once
+#include "RBTree.hpp"
+#include "utility.hpp"
+// #include "../rbtree/RBTree.hpp"
+// #include "../utilities/comparison.hpp"
 
 namespace ft {
 
@@ -21,7 +22,7 @@ public:
 	typedef const value_type&			const_reference;
 	typedef typename Allocator::pointer		pointer;
 	typedef typename Allocator::const_pointer	const_pointer;
-	typedef ft::tree_iterator<value_type>		iterator;
+	typedef ft::tree_iterator<const value_type>	iterator;
 	typedef ft::tree_iterator<const value_type>	const_iterator;
 	typedef ft::reverse_iterator<iterator>		reverse_iterator;
 	typedef ft::reverse_iterator<const_iterator>	const_reverse_iterator;
@@ -29,23 +30,33 @@ public:
 private:
 // underlying data structure 
 	RBTree<value_type, value_compare, allocator_type>	tree;
-	allocator_type						alloc;
+	allocator_type						key_alloc;
+	typedef ft::tree_iterator<value_compare>		__mutable_iterator;
 
 public:
 // ctors, dtor 
 	set(): tree() {}
-	explicit set(const Compare& comp, const Allocator& alloc = Allocator());
+	explicit set(const Compare& comp, const Allocator& alloc = Allocator()): tree(comp, alloc), key_alloc(alloc) {}
 	explicit set(const Allocator& alloc);
 	template <typename InputIt>
-	set(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator());
+	set(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()):
+		tree(comp, alloc), key_alloc(alloc) {
+			for (; first != last; ++first)
+				tree.insert(*first);
+	}
 	set(const set& other): tree(other.tree) {}
 	~set() {}
 
 // operator = 
-	set& operator = (const set& other) { tree = other.tree; return *this; }
+	set& operator = (const set& other) {
+		if (this == &other) return *this;
+		tree = other.tree;
+		key_alloc = other.key_alloc;
+		return *this;
+	}
 
 // get allocator 
-	allocator_type get_allocator() const { return alloc; }
+	allocator_type get_allocator() const { return key_alloc; }
 
 // begin, rbegin 
 	iterator begin() { return tree.begin(); }
@@ -66,30 +77,36 @@ public:
 	size_type size() const { return tree.size(); }
 
 // max_size 
-	size_type max_size() const { return std::numeric_limits<difference_type>::max(); }
+	size_type max_size() const { return tree.max_size(); }
 
 // clear 
 	void clear() { tree.clear(); }
 
 // insert 
-	ft::pair<iterator, bool> insert(const value_type& value) { return tree.insert(value); }
-	iterator insert(iterator hint, const value_type& value) { return tree.insert(hint, value); }
+	ft::pair<iterator, bool> insert(const value_type& value) {
+		return tree.insert(value);
+	}
+	iterator insert(iterator hint, const value_type& value) {
+		return tree.insert(hint, value);
+	}
 	template <typename InputIt>
-	void insert(InputIt first, InputIt last) { return tree.insert(first, last); }
+	void insert(InputIt first, InputIt last) {
+		return tree.insert(first, last);
+	}
 
 // erase 
 	void erase(iterator pos) { tree.erase(pos); }
 	void erase(iterator first, iterator last) { tree.erase(first, last); }
-	size_type erase(const Key& key) { tree.erase(key); }
+	size_type erase(const Key& key) { return tree.erase(key); }
 
 // swap 
 	void swap(set& other) {
 		ft::swap(tree, other.tree);
-		std::swap(alloc, other.alloc);
+		std::swap(key_alloc, other.key_alloc);
 	}
 
 // count 
-	size_type count(const Key& key) { return tree.count(key); }
+	size_type count(const Key& key) const { return tree.find(key) != tree.end(); }
 
 // find 
 	iterator find(const Key& key) { return tree.find(key); }
@@ -109,7 +126,15 @@ public:
 
 // key comp, value comp 
 	key_compare key_comp() const { return key_compare(); }
-	value_compare value_comp() const { return tree.value_compare(); }
+	value_compare value_comp() const { return value_compare(); }
+
+// friend operators for private tree access 
+	template <typename K, class C, class A>
+	friend bool operator ==
+	(const set<K,C,A>& lhs, const set<K,C,A>& hrs);
+	template <typename K, class C, class A>
+	friend bool operator <
+	(const set<K,C,A>& lhs, const set<K,C,A>& hrs);
 
 }; // ! class set
 
@@ -117,8 +142,7 @@ public:
 template <class Key, class Compare, class Alloc>
 inline bool
 operator == (const ft::set<Key, Compare, Alloc>& lhs, const ft::set<Key, Compare, Alloc>& rhs) {
-	if (lhs.size() != rhs.size()) return false;
-	return ft::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+	return lhs.tree == rhs.tree;
 }
 template <class Key, class Compare, class Alloc>
 inline bool
