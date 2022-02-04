@@ -3,7 +3,6 @@ includes	:=	utilities iterator vector stack rbtree map set
 
 objs		:=	main.o
 objdir		:=	./objs
-#objs		:=	$(addprefix $(objdir)/, $(objs))
 
 cxx		:=	c++
 cxxflags	:=	-Wall -Wextra -Werror -std=c++98

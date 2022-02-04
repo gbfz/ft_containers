@@ -1,11 +1,11 @@
 #include <vector>
-#include "vector/vector.hpp"
+#include "vector/Vector.hpp"
 #include <stack>
-#include "stack/stack.hpp"
+#include "stack/Stack.hpp"
 #include <map>
-#include "map/map.hpp"
+#include "map/Map.hpp"
 #include <set>
-#include "set/set.hpp"
+#include "set/Set.hpp"
 #include <iostream>
 
 clock_t START_TIMER;
@@ -132,8 +132,8 @@ void test_set_speed() {
 }
 
 int main() {
-	// test_vector_speed();
+	test_vector_speed();
 	// test_stack_speed();
 	// test_map_speed();
-	test_set_speed();
+	// test_set_speed();
 }
